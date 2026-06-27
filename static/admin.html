@@ -61,6 +61,22 @@ tr:hover { background: #fafafa; }
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 </style>
+
+<style>
+.progress-bar-wrap {
+    width: 100%;
+    height: 8px;
+    background: #eee;
+    border-radius: 4px;
+    overflow: hidden;
+}
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #1a73e8, #4a90d9);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+</style>
 </head>
 <body>
 <div class="navbar">
@@ -209,6 +225,10 @@ tr:hover { background: #fafafa; }
         <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
             <button class="btn btn-outline" onclick="closeModal('add-model-modal')">取消</button>
             <button class="btn btn-primary" onclick="uploadModel()">上传</button>
+            <div id="upload-progress-wrap" class="progress-bar-wrap" style="display:none;margin-top:12px">
+                <div id="upload-progress-bar" class="progress-bar" style="width:0%"></div>
+            </div>
+            <div id="upload-status" style="font-size:12px;color:#666;text-align:center;margin-top:4px;display:none"></div>
         </div>
     </div>
 </div>
@@ -389,6 +409,40 @@ function showAddModel() {
     showModal('add-model-modal');
 }
 
+function uploadModelWithProgress(fd, url) {
+    return new Promise(function(resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        var pw = document.getElementById('upload-progress-wrap');
+        var pb = document.getElementById('upload-progress-bar');
+        var ps = document.getElementById('upload-status');
+        pw.style.display = 'block';
+        ps.style.display = 'block';
+        xhr.upload.onprogress = function(e) {
+            if (e.lengthComputable) {
+                var pct = Math.round(e.loaded / e.total * 100);
+                pb.style.width = pct + '%';
+                ps.textContent = '上传中 ' + pct + '% (' + (e.loaded / 1024 / 1024).toFixed(1) + 'MB / ' + (e.total / 1024 / 1024).toFixed(1) + 'MB)';
+            }
+        };
+        xhr.onload = function() {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                var data = JSON.parse(xhr.responseText);
+                resolve(data);
+            } else {
+                try { var err = JSON.parse(xhr.responseText); reject(new Error(err.detail || '上传失败')); }
+                catch(e) { reject(new Error('上传失败: ' + xhr.status)); }
+            }
+            pw.style.display = 'none';
+            ps.style.display = 'none';
+        };
+        xhr.onerror = function() { reject(new Error('网络错误')); pw.style.display = 'none'; ps.style.display = 'none'; };
+        xhr.open('POST', url);
+        var pwd = getAdminPwd();
+        if (pwd) xhr.setRequestHeader('X-Admin-Password', pwd);
+        xhr.send(fd);
+    });
+}
+
 async function uploadModel() {
     var name = $('model-name').value.trim();
     var title = $('model-title').value.trim();
@@ -410,7 +464,7 @@ async function uploadModel() {
     if (cf) fd.append('cover_file', cf);
 
     try {
-        await api('POST', '/api/admin/categories/' + cat + '/models', fd);
+        await uploadModelWithProgress(fd, '/api/admin/categories/' + cat + '/models');
         toast('模型已添加');
         closeModal('add-model-modal');
         loadModels();
@@ -593,6 +647,38 @@ function onGSVCoverPick() {
     }
 }
 
+function gsvUploadWithProgress(fd, url) {
+    return new Promise(function(resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        var pw = document.getElementById('gsv-upload-progress-wrap');
+        var pb = document.getElementById('gsv-upload-progress-bar');
+        var ps = document.getElementById('gsv-upload-status');
+        pw.style.display = 'block';
+        ps.style.display = 'block';
+        xhr.upload.onprogress = function(e) {
+            if (e.lengthComputable) {
+                var pct = Math.round(e.loaded / e.total * 100);
+                pb.style.width = pct + '%';
+                ps.textContent = '上传中 ' + pct + '%';
+            }
+        };
+        xhr.onload = function() {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                resolve(JSON.parse(xhr.responseText));
+            } else {
+                try { var err = JSON.parse(xhr.responseText); reject(new Error(err.detail || '失败')); }
+                catch(e) { reject(new Error('失败: ' + xhr.status)); }
+            }
+            pw.style.display = 'none'; ps.style.display = 'none';
+        };
+        xhr.onerror = function() { reject(new Error('网络错误')); pw.style.display = 'none'; ps.style.display = 'none'; };
+        xhr.open(url === '/api/admin/gsv/models' ? 'POST' : 'PUT', url);
+        var pwd = getAdminPwd();
+        if (pwd) xhr.setRequestHeader('X-Admin-Password', pwd);
+        xhr.send(fd);
+    });
+}
+
 async function addGSVModel() {
     var origName = document.getElementById('gsv-edit-original-name').value;
     var isEdit = origName ? true : false;
@@ -622,10 +708,10 @@ async function addGSVModel() {
                 await api('DELETE', '/api/admin/gsv/models/' + encodeURIComponent(origName));
             }
             // Always update with PATCH - send all fields
-            await api('PUT', '/api/admin/gsv/models/' + encodeURIComponent(isEdit && origName !== name ? name : (origName || name)), fd);
+            await gsvUploadWithProgress(fd, '/api/admin/gsv/models/' + encodeURIComponent(isEdit && origName !== name ? name : (origName || name)));
             toast('模型已更新');
         } else {
-            await api('POST', '/api/admin/gsv/models', fd);
+            await gsvUploadWithProgress(fd, '/api/admin/gsv/models');
             toast('模型已添加');
         }
         closeModal('add-gsv-model-modal');
@@ -777,9 +863,14 @@ loadRvcRemoteConfig();
         <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
             <button class="btn btn-outline" onclick="closeModal('add-gsv-model-modal')">取消</button>
             <button class="btn btn-primary" id="gsv-modal-submit" onclick="addGSVModel()">添加</button>
+            <div id="gsv-upload-progress-wrap" class="progress-bar-wrap" style="display:none;margin-top:12px">
+                <div id="gsv-upload-progress-bar" class="progress-bar" style="width:0%"></div>
+            </div>
+            <div id="gsv-upload-status" style="font-size:12px;color:#666;text-align:center;margin-top:4px;display:none"></div>
         </div>
     </div>
 </div>
+
 
 
 
