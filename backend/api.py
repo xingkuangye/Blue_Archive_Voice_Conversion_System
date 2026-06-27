@@ -893,6 +893,66 @@ async def admin_add_model(request: Request,
         raise HTTPException(status_code=400, detail=str(e))
 
 
+@app.put("/api/admin/categories/{key}/models/{name}")
+async def admin_update_model(
+    request: Request, key: str, name: str,
+    char_name: str = Form(None),
+    title: str = Form(None),
+    author: str = Form(None),
+    model_file: UploadFile = File(None),
+    index_file: UploadFile = File(None),
+    cover_file: UploadFile = File(None),
+):
+    if not _check_admin(request):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    from backend.admin import _load_folder_info, _get_model_dir, update_model
+
+    fi = _load_folder_info()
+    if key not in fi:
+        raise HTTPException(status_code=404, detail=f"分类 '{key}' 不存在")
+    folder = fi[key]["folder_path"]
+    new_name = char_name  # may be None (no rename) or a new name
+
+    model_file_name = index_file_name = cover_file_name = None
+
+    if model_file:
+        model_dir = _get_model_dir(folder, new_name or name)
+        model_dir.mkdir(parents=True, exist_ok=True)
+        ext = os.path.splitext(model_file.filename)[1]
+        dest = model_dir / f"model{ext}"
+        with open(dest, "wb") as f:
+            f.write(await model_file.read())
+        model_file_name = str(dest.name)
+
+    if index_file:
+        model_dir = _get_model_dir(folder, new_name or name)
+        model_dir.mkdir(parents=True, exist_ok=True)
+        dest = model_dir / index_file.filename
+        with open(dest, "wb") as f:
+            f.write(await index_file.read())
+        index_file_name = str(dest.name)
+
+    if cover_file:
+        model_dir = _get_model_dir(folder, new_name or name)
+        model_dir.mkdir(parents=True, exist_ok=True)
+        ext = os.path.splitext(cover_file.filename)[1]
+        dest = model_dir / f"cover{ext}"
+        with open(dest, "wb") as f:
+            f.write(await cover_file.read())
+        cover_file_name = str(dest.name)
+
+    try:
+        result = update_model(key, name, new_name=new_name,
+                             title=title, author=author,
+                             model_file_name=model_file_name,
+                             index_file_name=index_file_name,
+                             cover_file_name=cover_file_name)
+        _refresh_metadata()
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 @app.delete("/api/admin/categories/{key}/models/{name}")
 async def admin_delete_model(request: Request, key: str, name: str):
     if not _check_admin(request):

@@ -184,3 +184,45 @@ def add_model(category_key: str, char_name: str, title: str, author: str = "",
     _save_model_info(folder_path, mi)
     logger.info(f"添加模型: {char_name} to {category_key}")
     return {"category": category_key, "name": char_name}
+
+
+def update_model(category_key: str, char_name: str, new_name: str = None,
+                 title: str = None, author: str = None,
+                 model_file_name: str = None, index_file_name: str = None,
+                 cover_file_name: str = None):
+    """Update model metadata. Renames the model if new_name differs from char_name."""
+    fi = _load_folder_info()
+    if category_key not in fi:
+        raise ValueError(f"分类 '{category_key}' 不存在")
+    folder_path = fi[category_key]["folder_path"]
+
+    mi = _load_model_info(folder_path)
+    if char_name not in mi:
+        raise ValueError(f"模型 '{char_name}' 不存在")
+
+    info = mi[char_name]
+    if title is not None:
+        info["title"] = title
+    if author is not None:
+        info["author"] = author
+    if model_file_name is not None:
+        info["model_path"] = model_file_name
+    if index_file_name is not None:
+        info["feature_retrieval_library"] = index_file_name
+    if cover_file_name is not None:
+        info["cover"] = cover_file_name
+
+    # Rename key + directory if name changed
+    if new_name is not None and new_name != char_name:
+        if new_name in mi:
+            raise ValueError(f"新名称 '{new_name}' 已存在")
+        old_dir = _get_model_dir(folder_path, char_name)
+        new_dir = _get_model_dir(folder_path, new_name)
+        if old_dir.exists():
+            old_dir.rename(new_dir)
+        mi[new_name] = mi.pop(char_name)
+        char_name = new_name
+
+    _save_model_info(folder_path, mi)
+    logger.info(f"更新模型: {char_name} in {category_key}")
+    return {"category": category_key, "name": char_name}

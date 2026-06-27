@@ -193,7 +193,7 @@ tr:hover { background: #fafafa; }
 <!-- 上传模型弹窗 -->
 <div id="add-model-modal" class="modal-overlay">
     <div class="modal">
-        <h3>上传新模型</h3>
+        <h3 id="model-modal-title">上传新模型</h3>
         <div class="form-row">
             <div class="form-group"><label>角色名称</label><input id="model-name" placeholder="如: 白子-シロコ-Shiroko"></div>
             <div class="form-group"><label>显示标题</label><input id="model-title" placeholder="如: Blue Archive - 白子 - 20 epochs"></div>
@@ -201,6 +201,8 @@ tr:hover { background: #fafafa; }
         <div class="form-row">
             <div class="form-group"><label>作者</label><input id="model-author" placeholder="可选"></div>
             <div class="form-group"><label>目标分类</label><select id="model-cat-select"></select></div>
+            <input type="hidden" id="model-edit-original-name" value="">
+            <input type="hidden" id="model-edit-original-cat" value="">
         </div>
         <div class="form-row">
             <div class="form-group">
@@ -392,7 +394,8 @@ function renderModels(models, catKey) {
             + '<td>' + formatSize(m.model_size) + '</td>'
             + '<td>' + formatSize(m.index_size) + '</td>'
             + '<td>' + statusHtml + '</td>'
-            + '<td><button class="btn btn-danger btn-sm" onclick="deleteModel(\'' + catKey + '\',\'' + m.name + '\')">删除</button></td>'
+            + '<td><button class="btn btn-outline btn-sm" onclick="showEditModel(\'' + catKey + '\',\'' + m.name + '\')" style="margin-right:4px">编辑</button>'
+            + '<button class="btn btn-danger btn-sm" onclick="deleteModel(\'' + catKey + '\',\'' + m.name + '\')">删除</button></td>'
             + '</tr>';
     }
     html += '</tbody></table>';
@@ -401,12 +404,43 @@ function renderModels(models, catKey) {
 }
 
 function showAddModel() {
+    $('model-modal-title').textContent = '上传新模型';
     $('model-name').value = ''; $('model-title').value = ''; $('model-author').value = '';
     $('model-file-input').value = ''; $('index-file-input').value = ''; $('cover-file-input').value = '';
     $('model-file-upload').textContent = '点击选择 .pth 模型文件'; $('model-file-upload').className = 'file-upload';
     $('index-file-upload').textContent = '点击选择 .index 文件'; $('index-file-upload').className = 'file-upload';
     $('cover-file-upload').textContent = '点击选择图片'; $('cover-file-upload').className = 'file-upload';
+    $('model-edit-original-name').value = '';
+    $('model-edit-original-cat').value = '';
     showModal('add-model-modal');
+}
+
+async function showEditModel(catKey, modelName) {
+    // Fetch model details
+    try {
+        var resp = await api('GET', '/api/admin/categories/' + encodeURIComponent(catKey) + '/models');
+        var models = resp.models || [];
+        var m = null;
+        for (var i = 0; i < models.length; i++) {
+            if (models[i].name === modelName) { m = models[i]; break; }
+        }
+        if (!m) { toast('模型未找到'); return; }
+
+        $('model-modal-title').textContent = '编辑模型 - ' + m.title;
+        $('model-name').value = m.name;
+        $('model-title').value = m.title;
+        $('model-author').value = m.author || '';
+        $('model-cat-select').value = catKey;
+        $('model-file-input').value = '';
+        $('index-file-input').value = '';
+        $('cover-file-input').value = '';
+        $('model-file-upload').textContent = m.model_path ? '当前: ' + m.model_path + ' (点击更换)' : '点击选择 .pth 模型文件';
+        $('index-file-upload').textContent = m.model_path && m.feature_retrieval_library ? '当前: ' + m.feature_retrieval_library + ' (点击更换)' : '点击选择 .index 文件';
+        $('cover-file-upload').textContent = m.cover ? '当前: ' + m.cover + ' (点击更换)' : '点击选择图片';
+        $('model-edit-original-name').value = m.name;
+        $('model-edit-original-cat').value = catKey;
+        showModal('add-model-modal');
+    } catch(e) { toast('加载失败: ' + e.message); }
 }
 
 function uploadModelWithProgress(fd, url) {
@@ -436,7 +470,9 @@ function uploadModelWithProgress(fd, url) {
             ps.style.display = 'none';
         };
         xhr.onerror = function() { reject(new Error('网络错误')); pw.style.display = 'none'; ps.style.display = 'none'; };
-        xhr.open('POST', url);
+        // Use PUT for edit (URL contains model name after "models/")
+        var method = url.match(/\/models\/[^\/]+$/) ? 'PUT' : 'POST';
+        xhr.open(method, url);
         var pwd = getAdminPwd();
         if (pwd) xhr.setRequestHeader('X-Admin-Password', pwd);
         xhr.send(fd);
