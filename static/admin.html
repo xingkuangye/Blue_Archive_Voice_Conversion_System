@@ -664,6 +664,7 @@ function showAddGSVModel() {
     document.getElementById('gsv-prompt-text').value = '';
     document.getElementById('gsv-prompt-lang').value = 'zh';
     document.getElementById('gsv-text-lang').value = 'zh';
+    document.getElementById('gsv-section').value = '';
     document.getElementById('gsv-cover-input').value = '';
     document.getElementById('gsv-cover-url').value = '';
     document.getElementById('gsv-cover-info').textContent = '';
@@ -738,6 +739,7 @@ async function addGSVModel() {
     fd.append('prompt_text', document.getElementById('gsv-prompt-text').value.trim());
     fd.append('prompt_lang', document.getElementById('gsv-prompt-lang').value);
     fd.append('text_lang', document.getElementById('gsv-text-lang').value);
+    fd.append('section', document.getElementById('gsv-section').value.trim());
 
     // Cover: prefer uploaded file, fallback to URL
     var coverFile = document.getElementById('gsv-cover-input').files[0];
@@ -776,6 +778,7 @@ function showEditGSVModal(m) {
     document.getElementById('gsv-prompt-text').value = m.prompt_text || '';
     document.getElementById('gsv-prompt-lang').value = m.prompt_lang || 'zh';
     document.getElementById('gsv-text-lang').value = m.text_lang || 'zh';
+    document.getElementById('gsv-section').value = m.section || '';
     document.getElementById('gsv-cover-url').value = m.cover || '';
     document.getElementById('gsv-cover-input').value = '';
     document.getElementById('gsv-cover-info').textContent = '';
@@ -893,6 +896,9 @@ loadRvcRemoteConfig();
         </div>
         <div class="form-row">
             <div class="form-group"><label>TTS 语言</label><select id="gsv-text-lang"><option value="zh">中文</option><option value="ja">日文</option><option value="en">英文</option></select></div>
+            <div class="form-group"><label>板块分类</label><input id="gsv-section" placeholder="留空则不分类" style="font-size:12px"></div>
+        </div>
+        <div class="form-row">
             <div class="form-group">
                 <label>封面图</label>
                 <div class="file-upload" id="gsv-cover-upload" onclick="document.getElementById('gsv-cover-input').click()">点击选择图片（也可直接输入URL）</div>

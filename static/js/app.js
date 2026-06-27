@@ -478,51 +478,88 @@ function renderGSVGrid() {
         grid.appendChild(msg);
         return;
     }
+    // Group by section
+    var groups = {};
     for (var i = 0; i < _gsvModels.length; i++) {
-        var ch = _gsvModels[i];
-        var card = document.createElement('div');
-        card.className = 'character-card';
-        card.onclick = (function(name) { return function() { selectGSVCharacter(name); }; })(ch.name);
-
-        var coverUrl = '';
-        if (ch.cover) {
-            var cv = ch.cover;
-            if (cv.indexOf('gsv_covers') > -1 || cv.indexOf('temp/gsv_covers') > -1) {
-                var parts = cv.split('/');
-                coverUrl = '/api/download/gsv_covers/' + parts[parts.length - 1];
-            } else {
-                coverUrl = cv;
-            }
-        }
-
-        var img = document.createElement('img');
-        img.className = 'char-card-img';
-        img.alt = ch.name;
-        img.loading = 'lazy';
-        if (coverUrl) {
-            img.src = coverUrl;
-        } else {
-            img.style.display = 'none';
-        }
-        img.onerror = function() {
-            this.style.display = 'none';
-        };
-
-        var body = document.createElement('div');
-        body.className = 'char-card-body';
-        var nameEl = document.createElement('h4');
-        nameEl.textContent = ch.name;
-        var tag = document.createElement('span');
-        tag.className = 'char-version';
-        tag.textContent = 'GSV';
-        body.appendChild(nameEl);
-        body.appendChild(tag);
-
-        card.appendChild(img);
-        card.appendChild(body);
-        grid.appendChild(card);
+        var m = _gsvModels[i];
+        var sec = m.section || '未分类';
+        if (!groups[sec]) groups[sec] = [];
+        groups[sec].push(m);
     }
-}
+    var sectionOrder = Object.keys(groups).sort(function(a, b) {
+        if (a === '未分类') return 1;
+        if (b === '未分类') return -1;
+        return a.localeCompare(b);
+    });
+
+    for (var si = 0; si < sectionOrder.length; si++) {
+        var sec = sectionOrder[si];
+        var models = groups[sec];
+
+        var section = document.createElement('div');
+        section.className = 'category-section';
+        section.style.cssText = 'margin-bottom:28px';
+
+        var header = document.createElement('div');
+        header.className = 'category-header';
+        header.style.cssText = 'margin-bottom:12px';
+        var h3 = document.createElement('h3');
+        h3.style.cssText = 'font-size:16px;font-weight:600;color:#222;margin:0';
+        h3.textContent = sec;
+        header.appendChild(h3);
+        section.appendChild(header);
+
+        var gridWrap = document.createElement('div');
+        gridWrap.className = 'character-grid';
+
+        for (var mi = 0; mi < models.length; mi++) {
+            var ch = models[mi];
+            var card = document.createElement('div');
+            card.className = 'character-card';
+            card.onclick = (function(name) { return function() { selectGSVCharacter(name); }; })(ch.name);
+
+            var coverUrl = '';
+            if (ch.cover) {
+                var cv = ch.cover;
+                if (cv.indexOf('gsv_covers') > -1 || cv.indexOf('temp/gsv_covers') > -1) {
+                    var parts = cv.split('/');
+                    coverUrl = '/api/download/gsv_covers/' + parts[parts.length - 1];
+                } else {
+                    coverUrl = cv;
+                }
+            }
+
+            var img = document.createElement('img');
+            img.className = 'char-card-img';
+            img.alt = ch.name;
+            img.loading = 'lazy';
+            if (coverUrl) {
+                img.src = coverUrl;
+            } else {
+                img.style.display = 'none';
+            }
+            img.onerror = function() {
+                this.style.display = 'none';
+            };
+
+            var body = document.createElement('div');
+            body.className = 'char-card-body';
+            var nameEl = document.createElement('h4');
+            nameEl.textContent = ch.name;
+            var tag = document.createElement('span');
+            tag.className = 'char-version';
+            tag.textContent = 'GSV';
+            body.appendChild(nameEl);
+            body.appendChild(tag);
+
+            card.appendChild(img);
+            card.appendChild(body);
+            gridWrap.appendChild(card);
+        }
+
+        section.appendChild(gridWrap);
+        grid.appendChild(section);
+    }
 
 function selectGSVCharacter(name) {
     _gsvCurrentChar = name;

@@ -9,6 +9,7 @@ from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import uvicorn
+from PIL import Image
 
 # Admin password (override via env var)
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
@@ -380,6 +381,23 @@ def _refresh_metadata():
     global categories_meta
     categories_meta = get_characters_metadata()
 
+
+def _compress_image(img_bytes: bytes, max_size: int = 300) -> bytes:
+    """Compress image to JPEG with max dimension and quality 80"""
+    import io
+    try:
+        im = Image.open(io.BytesIO(img_bytes))
+        im = im.convert("RGB")
+        w, h = im.size
+        if w > max_size or h > max_size:
+            ratio = max_size / max(w, h)
+            im = im.resize((int(w * ratio), int(h * ratio)), Image.LANCZOS)
+        buf = io.BytesIO()
+        im.save(buf, format="JPEG", quality=80, optimize=True)
+        return buf.getvalue()
+    except Exception:
+        return img_bytes
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global categories_meta, tts_voices_cache
@@ -410,8 +428,22 @@ async def health():
     return {"status": "ok", "ml_available": ml_available}
 
 @app.get("/api/models")
-async def list_models():
-    return {"categories": get_characters_metadata()}
+async def list_models(search: str = ""):
+    cats = get_characters_metadata()
+    if search:
+        q = search.lower()
+        filtered = []
+        for cat in cats:
+            chars = [ch for ch in cat.get("characters", [])
+                     if q in ch.get("name", "").lower()
+                     or q in ch.get("title", "").lower()
+                     or q in ch.get("author", "").lower()]
+            if chars:
+                nc = dict(cat)
+                nc["characters"] = chars
+                filtered.append(nc)
+        return {"categories": filtered}
+    return {"categories": cats}
 
 @app.get("/api/voices")
 async def list_voices():
@@ -549,9 +581,14 @@ async def gsv_config():
 
 
 @app.get("/api/gsv/models")
-async def gsv_models():
+async def gsv_models(search: str = "", section: str = ""):
     from backend.gsv import get_models
     ms = get_models()
+    if section:
+        ms = [m for m in ms if m.get("section", "") == section]
+    if search:
+        q = search.lower()
+        ms = [m for m in ms if q in m.get("name", "").lower()]
     return {"models": ms, "available": len(ms) > 0}
 
 
@@ -674,6 +711,7 @@ async def admin_gsv_update_model(
     text_lang: str = Form(None),
     cover: str = Form(None),
     enable: str = Form(None),
+    section: str = Form(None),
     cover_file: UploadFile = File(None),
 ):
     if not _check_admin(request):
@@ -690,16 +728,18 @@ async def admin_gsv_update_model(
             if text_lang is not None: m["text_lang"] = text_lang
             if enable is not None:
                 m["enable"] = enable.lower() in ("true", "1", "yes")
+            if section is not None: m["section"] = section
             if cover is not None: m["cover"] = cover
-            # Handle cover file upload
+            # Handle cover file upload with compression
             if cover_file and cover_file.filename:
                 cover_dir = Path(__file__).parent.parent / "temp" / "gsv_covers"
                 cover_dir.mkdir(parents=True, exist_ok=True)
-                ext = os.path.splitext(cover_file.filename)[1] or ".jpg"
-                cover_name = f"{name}{ext}"
+                cover_name = f"{name}.jpg"
                 dest = cover_dir / cover_name
+                raw = await cover_file.read()
+                compressed = _compress_image(raw)
                 with open(dest, "wb") as f:
-                    f.write(await cover_file.read())
+                    f.write(compressed)
                 m["cover"] = str(dest)
             save_config(cfg)
             return {"ok": True}
@@ -880,11 +920,12 @@ async def admin_add_model(request: Request,
         index_path = str(dest.name)
 
     if cover_file:
-        ext = os.path.splitext(cover_file.filename)[1]
-        dest = model_dir / f"cover{ext}"
+        raw = await cover_file.read()
+        compressed = _compress_image(raw)
+        dest = model_dir / "cover.jpg"
         with open(dest, "wb") as f:
-            f.write(await cover_file.read())
-        cover_path = str(dest.name)
+            f.write(compressed)
+        cover_path = "cover.jpg"
 
     try:
         result = add_model(key, char_name, title, author,
@@ -937,11 +978,12 @@ async def admin_update_model(
     if cover_file:
         model_dir = _get_model_dir(folder, new_name or name)
         model_dir.mkdir(parents=True, exist_ok=True)
-        ext = os.path.splitext(cover_file.filename)[1]
-        dest = model_dir / f"cover{ext}"
+        raw = await cover_file.read()
+        compressed = _compress_image(raw)
+        dest = model_dir / "cover.jpg"
         with open(dest, "wb") as f:
-            f.write(await cover_file.read())
-        cover_file_name = str(dest.name)
+            f.write(compressed)
+        cover_file_name = "cover.jpg"
 
     try:
         result = update_model(key, name, new_name=new_name,
