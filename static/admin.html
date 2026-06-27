@@ -505,7 +505,13 @@ async function uploadModel() {
         var origName = $('model-edit-original-name').value;
         var origCat = $('model-edit-original-cat').value;
         if (isEdit) {
-            await uploadModelWithProgress(fd, '/api/admin/categories/' + encodeURIComponent(origCat) + '/models/' + encodeURIComponent(origName));
+            if (origCat !== cat) {
+                // 改了分类：先添加到新分类，再删除旧的
+                await uploadModelWithProgress(fd, '/api/admin/categories/' + encodeURIComponent(cat) + '/models');
+                await api('DELETE', '/api/admin/categories/' + encodeURIComponent(origCat) + '/models/' + encodeURIComponent(origName));
+            } else {
+                await uploadModelWithProgress(fd, '/api/admin/categories/' + encodeURIComponent(origCat) + '/models/' + encodeURIComponent(origName));
+            }
             toast('模型已更新');
         } else {
             await uploadModelWithProgress(fd, '/api/admin/categories/' + cat + '/models');
