@@ -436,11 +436,35 @@ main {
 
 
 
+/* ─── 卡片基础样式 ─── */
+.char-card-img {
+    width: 100%;
+    display: block;
+}
+
+.char-card-body .char-version {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    color: white;
+    background: var(--ba-blue);
+    padding: 2px 10px;
+    border-radius: 20px;
+    margin-top: 4px;
+}
+
+.char-card-body .char-meta {
+    font-size: 11px;
+    color: var(--ba-text-secondary);
+    margin: 2px 0;
+}
+
 #gsv-character-grid .character-grid {
     display: flex;
     gap: 12px;
     overflow-x: auto;
     overflow-y: hidden;
+    scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
     padding-bottom: 8px;
     scrollbar-width: thin;
@@ -528,7 +552,9 @@ main {
 
 .category-section .char-card-img {
     aspect-ratio: 3/4;
-    object-fit: cover;
+    object-fit: contain;
+    background: var(--ba-bg);
+    width: 100%;
 }
 
 .category-section .char-card-img-placeholder {
@@ -548,7 +574,8 @@ main {
 
     .category-section .char-card-img {
         aspect-ratio: 3/4;
-        object-fit: cover;
+        object-fit: contain;
+        background: var(--ba-bg);
     }
 
     .category-section .char-card-img-placeholder {
