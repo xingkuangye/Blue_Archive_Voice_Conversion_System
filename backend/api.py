@@ -767,16 +767,15 @@ async def admin_gsv_update_model(
                 if exists:
                     raise HTTPException(status_code=400, detail=f"名称 '{new_name}' 已存在")
                 m["name"] = new_name.strip()
-            # Handle cover file upload with compression
+            # Handle cover file upload
             if cover_file and cover_file.filename:
                 cover_dir = Path(__file__).parent.parent / "temp" / "gsv_covers"
                 cover_dir.mkdir(parents=True, exist_ok=True)
-                cover_name = f"{name}.jpg"
+                ext = os.path.splitext(cover_file.filename)[1] or ".jpg"
+                cover_name = f"{name}{ext}"
                 dest = cover_dir / cover_name
-                raw = await cover_file.read()
-                compressed = _compress_image(raw)
                 with open(dest, "wb") as f:
-                    f.write(compressed)
+                    f.write(await cover_file.read())
                 m["cover"] = str(dest)
             save_config(cfg)
             return {"ok": True}
@@ -957,12 +956,10 @@ async def admin_add_model(request: Request,
         index_path = str(dest.name)
 
     if cover_file:
-        raw = await cover_file.read()
-        compressed = _compress_image(raw)
-        dest = model_dir / "cover.jpg"
+        dest = model_dir / cover_file.filename
         with open(dest, "wb") as f:
-            f.write(compressed)
-        cover_path = "cover.jpg"
+            f.write(await cover_file.read())
+        cover_path = str(dest.name)
 
     try:
         result = add_model(key, char_name, title, author,
@@ -1015,12 +1012,10 @@ async def admin_update_model(
     if cover_file:
         model_dir = _get_model_dir(folder, new_name or name)
         model_dir.mkdir(parents=True, exist_ok=True)
-        raw = await cover_file.read()
-        compressed = _compress_image(raw)
-        dest = model_dir / "cover.jpg"
+        dest = model_dir / cover_file.filename
         with open(dest, "wb") as f:
-            f.write(compressed)
-        cover_file_name = "cover.jpg"
+            f.write(await cover_file.read())
+        cover_file_name = str(dest.name)
 
     try:
         result = update_model(key, name, new_name=new_name,
