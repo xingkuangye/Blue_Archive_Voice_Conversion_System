@@ -80,10 +80,11 @@ async def separate_remote(audio_data: bytes, model_name: str = "mel_band_roforme
     api_url = cfg["api_url"]
     timeout = cfg.get("timeout", 120)
 
-    if cb: cb(10, "上传音频到远程服务器...")
+    if cb: cb(15, "上传音频到远程服务器...")
     async with httpx.AsyncClient(timeout=120) as client:
         # 上传音频文件
         files = {"audio": ("input.wav", audio_data, "audio/wav")}
+        if cb: cb(20, "远程处理中，请等待...")
         resp = await client.post(
             f"{api_url.rstrip('/')}/api/uvr5/separate",
             data={"model_name": model_name},
@@ -124,9 +125,10 @@ async def dereverb_remote(audio_data: bytes, overlap: int = 4, cb=None) -> dict:
     api_url = cfg["api_url"]
     timeout = cfg.get("timeout", 120)
 
-    if cb: cb(10, "上传音频到远程服务器...")
+    if cb: cb(15, "上传音频到远程服务器...")
     async with httpx.AsyncClient(timeout=120) as client:
         files = {"audio": ("input.wav", audio_data, "audio/wav")}
+        if cb: cb(20, "远程处理中，请等待...")
         resp = await client.post(
             f"{api_url.rstrip('/')}/api/uvr5/dereverb",
             data={"overlap": overlap},
