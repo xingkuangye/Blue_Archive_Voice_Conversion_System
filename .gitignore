@@ -21,8 +21,12 @@ temp/
 *.pth
 *.onnx
 *.index
+*.ckpt
 hubert_base.pt
 rmvpe.pt
+
+# Weights (large model weights)
+weights/
 
 # IDE
 .vscode/
