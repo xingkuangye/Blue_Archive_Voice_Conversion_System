@@ -27,7 +27,7 @@ _config = None
 _NUM_CORES = cpu_count()
 torch.set_num_threads(_NUM_CORES)
 torch.set_num_interop_threads(min(4, _NUM_CORES))
-logger.info(f"CPU 核心数: {_NUM_CORES}, PyTorch 线程数: {_NUM_CORES}")
+logger.info(f"系统核心: {_NUM_CORES}, 推理设备: {device if device else "cpu"}")
 
 
 def _clean_yaml(raw: str) -> str:
@@ -74,7 +74,7 @@ def load_model(device=None):
     else:
         model.load_state_dict(state)
     model.to(device).eval()
-    logger.info(f"MelBandRoformer 加载成功: {sum(p.numel() for p in model.parameters()):,} params")
+    logger.info(f"MelBandRoformer 加载成功: {sum(p.numel() for p in model.parameters()):,} params, 设备: {device}")
     _model = model
     return _model, _config
 
