@@ -500,8 +500,16 @@ async function uploadModel() {
     if (cf) fd.append('cover_file', cf);
 
     try {
-        await uploadModelWithProgress(fd, '/api/admin/categories/' + cat + '/models');
-        toast('模型已添加');
+        var isEdit = $('model-edit-original-name').value !== '';
+        var origName = $('model-edit-original-name').value;
+        var origCat = $('model-edit-original-cat').value;
+        if (isEdit) {
+            await uploadModelWithProgress(fd, '/api/admin/categories/' + encodeURIComponent(origCat) + '/models/' + encodeURIComponent(origName));
+            toast('模型已更新');
+        } else {
+            await uploadModelWithProgress(fd, '/api/admin/categories/' + cat + '/models');
+            toast('模型已添加');
+        }
         closeModal('add-model-modal');
         loadModels();
         loadCategories();
