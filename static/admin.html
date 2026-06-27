@@ -91,6 +91,7 @@ tr:hover { background: #fafafa; }
     <button class="tab" data-tab="models" onclick="switchTab('models')">模型管理</button>
     <button class="tab" data-tab="gsv" onclick="switchTab('gsv')">GSV TTS</button>
     <button class="tab" data-tab="remote" onclick="switchTab('remote')">远程 RVC</button>
+    <button class="tab" data-tab="uvr5-remote" onclick="switchTab('uvr5-remote')">远程 UVR5</button>
     <button class="tab" data-tab="settings" onclick="switchTab('settings')">系统状态</button>
 </div>
 
@@ -877,7 +878,49 @@ loadRvcRemoteConfig();
     </div>
 </div>
 
+</div>
+
+<!-- 远程 UVR5 -->
+<div id="tab-uvr5-remote" class="tab-content">
+    <div class="card">
+        <div class="card-header">
+            <h2>远程 UVR5 服务器</h2>
+            <button class="btn btn-outline" onclick="testUVR5Remote()">🔄 测试连接</button>
+        </div>
+        <div class="form-row">
+            <div class="form-group" style="flex:2">
+                <label>API 地址</label>
+                <input id="uvr5-remote-url" placeholder="http://192.168.1.100:7861" style="font-family:monospace;font-size:12px">
+            </div>
+            <div class="form-group" style="flex:0 0 80px">
+                <label>超时(秒)</label>
+                <input id="uvr5-remote-timeout" value="120" type="number">
+            </div>
+            <div class="form-group" style="display:flex;align-items:flex-end;gap:4px">
+                <label class="toggle" style="margin-bottom:1px">
+                    <input type="checkbox" id="uvr5-remote-enabled" onchange="saveUVR5RemoteConfig()">
+                    <span class="toggle-slider"></span>
+                </label>
+                <span style="font-size:12px;color:#666">启用</span>
+            </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn btn-primary" onclick="saveUVR5RemoteConfig()">保存配置</button>
+        </div>
+        <div id="uvr5-remote-status" style="font-size:13px;margin-top:12px;padding:8px 12px;background:#f5f5f5;border-radius:8px"></div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h2>说明</h2></div>
+        <div style="font-size:13px;line-height:1.8;color:#666">
+            <p>配置远程 UVR5 服务后，人声分离和混响消除任务将优先发送到远程服务器处理。</p>
+            <p>如果远程服务不可用，自动回退到本地处理。</p>
+            <p>远程服务器需要运行 <code>python uvr5_server/api_server.py</code> 启动 UVR5 API。</p>
+        </div>
+    </div>
+</div>
+
 <!-- 添加 GSV 模型弹窗 -->
+
 <div id="add-gsv-model-modal" class="modal-overlay">
     <div class="modal">
         <h3 id="gsv-modal-title">添加 GSV 模型</h3>
@@ -923,5 +966,51 @@ loadRvcRemoteConfig();
 
 
 
+
+<script>
+// ─── 远程 UVR5 ───
+async function loadUVR5RemoteConfig() {
+    try {
+        var data = await api('GET', '/api/admin/uvr5_remote/config');
+        document.getElementById('uvr5-remote-url').value = data.api_url || '';
+        document.getElementById('uvr5-remote-timeout').value = data.timeout || 120;
+        document.getElementById('uvr5-remote-enabled').checked = data.enabled || false;
+        var statusEl = document.getElementById('uvr5-remote-status');
+        statusEl.innerHTML = data.api_url ? '已配置: <code>' + data.api_url + '</code>' : '未配置远程服务器';
+    } catch(e) { toast('加载远程UVR5配置失败: ' + e.message); }
+}
+
+async function saveUVR5RemoteConfig() {
+    var fd = new FormData();
+    fd.append('api_url', document.getElementById('uvr5-remote-url').value.trim());
+    fd.append('timeout', parseInt(document.getElementById('uvr5-remote-timeout').value) || 120);
+    fd.append('enabled', document.getElementById('uvr5-remote-enabled').checked);
+    try {
+        await api('PUT', '/api/admin/uvr5_remote/config', fd);
+        toast('UVR5 远程配置已保存');
+        loadUVR5RemoteConfig();
+    } catch(e) { toast('保存失败: ' + e.message); }
+}
+
+async function testUVR5Remote() {
+    var statusEl = document.getElementById('uvr5-remote-status');
+    statusEl.innerHTML = '⏳ 测试连接中...';
+    try {
+        var data = await api('GET', '/api/admin/uvr5_remote/check');
+        statusEl.innerHTML = (data.ok ? '✅ ' : '❌ ') + data.message;
+    } catch(e) { statusEl.innerHTML = '❌ 测试失败: ' + e.message; }
+}
+
+// Load UVR5 remote config on tab switch
+(function() {
+    var orig = window.switchTab;
+    window.switchTab = function(name) {
+        if (name === 'uvr5-remote') {
+            setTimeout(loadUVR5RemoteConfig, 50);
+        }
+        if (orig) orig(name);
+    };
+})();
+</script>
 
 </html>

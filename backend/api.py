@@ -240,16 +240,15 @@ def task_convert(params: dict, cb) -> dict:
 def task_uvr5_separate(params: dict, cb) -> dict:
     # Try remote first
     try:
-        from backend.rvc_remote import load_config, uvr5_remote
+        from backend.uvr5_remote import load_config, separate_remote
         cfg = load_config()
         if cfg.get("enabled") and cfg.get("api_url"):
             cb(10, "远程处理中...")
-            import asyncio, soundfile as sf, uuid as uu, io
+            import asyncio, uuid as uu
             audio_path = params["audio_path"]
             with open(audio_path, "rb") as af:
                 audio_data = af.read()
-            result = asyncio.run(uvr5_remote(audio_data, params.get("model_name", "mel_band_roformer")))
-            # Save results
+            result = asyncio.run(separate_remote(audio_data, params.get("model_name", "mel_band_roformer")))
             def save_stem(blob, stem):
                 p = f"temp/{stem}_{uu.uuid4().hex[:8]}.wav"
                 with open(p, "wb") as f:
@@ -258,7 +257,7 @@ def task_uvr5_separate(params: dict, cb) -> dict:
             vocal_path = save_stem(result.get("vocals", b""), "vocals")
             inst_path = save_stem(result.get("instrumental", b""), "inst")
             cb(100, "远程处理完成")
-            return {"vocals": vocal_path, "instrumental": inst_path, "status": "远程分离完成"}
+            return {"vocals": vocal_path, "instrumental": inst_path, "status": result.get("status", "远程分离完成")}
     except Exception as e:
         logger.warning(f"远程 UVR5 不可用，回退到本地: {e}")
 
@@ -292,6 +291,29 @@ def task_uvr5_separate(params: dict, cb) -> dict:
 
 
 def task_uvr5_dereverb(params: dict, cb) -> dict:
+    # Try remote first
+    try:
+        from backend.uvr5_remote import load_config, dereverb_remote
+        cfg = load_config()
+        if cfg.get("enabled") and cfg.get("api_url"):
+            cb(10, "远程处理中...")
+            import asyncio, uuid as uu
+            audio_path = params["audio_path"]
+            with open(audio_path, "rb") as af:
+                audio_data = af.read()
+            result = asyncio.run(dereverb_remote(audio_data, params.get("overlap", 4)))
+            def save_stem(blob, stem):
+                p = f"temp/{stem}_{uu.uuid4().hex[:8]}.wav"
+                with open(p, "wb") as f:
+                    f.write(blob)
+                return p
+            dry_path = save_stem(result.get("dry", b""), "dry")
+            reverb_path = save_stem(result.get("reverb", b""), "reverb")
+            cb(100, "远程处理完成")
+            return {"dry": dry_path, "reverb": reverb_path, "status": result.get("status", "远程去混响完成")}
+    except Exception as e:
+        logger.warning(f"远程 UVR5 去混响不可用，回退到本地: {e}")
+
     from uvr5 import separate_dereverb
 
     cb(5, "加载去混响模型...")
@@ -982,6 +1004,41 @@ async def admin_delete_model(request: Request, key: str, name: str):
         return result
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+
+# ════════════════════════════════════════
+# UVR5 Remote Config
+# ════════════════════════════════════════
+
+@app.get("/api/admin/uvr5_remote/config")
+async def admin_uvr5_remote_config(request: Request):
+    if not _check_admin(request):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    from backend.uvr5_remote import load_config
+    return load_config()
+
+
+@app.put("/api/admin/uvr5_remote/config")
+async def admin_uvr5_remote_update(
+    request: Request,
+    api_url: str = Form(...),
+    enabled: bool = Form(False),
+    timeout: int = Form(120),
+):
+    if not _check_admin(request):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    from backend.uvr5_remote import save_config
+    save_config({"api_url": api_url, "enabled": enabled, "timeout": timeout})
+    return {"ok": True}
+
+
+@app.get("/api/admin/uvr5_remote/check")
+async def admin_uvr5_remote_check(request: Request):
+    if not _check_admin(request):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    from backend.uvr5_remote import check_connection
+    return await check_connection()
+
 
 def run():
     uvicorn.run("backend.api:app", host="0.0.0.0", port=7860, reload=False)

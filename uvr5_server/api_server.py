@@ -215,6 +215,19 @@ async def dereverb(
 
 
 # ════════════════════════════════════════════
+# 文件下载
+# ════════════════════════════════════════════
+
+@app.get("/api/download/{filename:path}")
+async def download(filename: str):
+    """下载临时文件"""
+    fp = _temp_dir / filename
+    if not fp.exists() or not fp.is_file():
+        raise HTTPException(status_code=404, detail="文件未找到")
+    return FileResponse(str(fp))
+
+
+# ════════════════════════════════════════════
 # 主入口
 # ════════════════════════════════════════════
 
