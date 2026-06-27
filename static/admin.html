@@ -741,6 +741,7 @@ async function addGSVModel() {
     fd.append('prompt_lang', document.getElementById('gsv-prompt-lang').value);
     fd.append('text_lang', document.getElementById('gsv-text-lang').value);
     fd.append('section', document.getElementById('gsv-section').value.trim());
+    fd.append('new_name', name);
 
     // Cover: prefer uploaded file, fallback to URL
     var coverFile = document.getElementById('gsv-cover-input').files[0];
@@ -755,7 +756,7 @@ async function addGSVModel() {
                 await api('DELETE', '/api/admin/gsv/models/' + encodeURIComponent(origName));
             }
             // Always update with PATCH - send all fields
-            await gsvUploadWithProgress(fd, '/api/admin/gsv/models/' + encodeURIComponent(isEdit && origName !== name ? name : (origName || name)));
+            await gsvUploadWithProgress(fd, '/api/admin/gsv/models/' + encodeURIComponent(origName));
             toast('模型已更新');
         } else {
             await gsvUploadWithProgress(fd, '/api/admin/gsv/models');

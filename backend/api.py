@@ -708,6 +708,7 @@ async def admin_gsv_update_model(
     cover: str = Form(None),
     enable: str = Form(None),
     section: str = Form(None),
+    new_name: str = Form(None),
     cover_file: UploadFile = File(None),
 ):
     if not _check_admin(request):
@@ -726,6 +727,13 @@ async def admin_gsv_update_model(
                 m["enable"] = enable.lower() in ("true", "1", "yes")
             if section is not None: m["section"] = section
             if cover is not None: m["cover"] = cover
+            # Handle rename
+            if new_name is not None and new_name.strip() and new_name != m["name"]:
+                # Check for conflict
+                exists = any(x["name"] == new_name for x in cfg["models"])
+                if exists:
+                    raise HTTPException(status_code=400, detail=f"名称 '{new_name}' 已存在")
+                m["name"] = new_name.strip()
             # Handle cover file upload with compression
             if cover_file and cover_file.filename:
                 cover_dir = Path(__file__).parent.parent / "temp" / "gsv_covers"
