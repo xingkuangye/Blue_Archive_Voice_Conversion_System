@@ -409,18 +409,15 @@ main {
     transform: scale(0.97);
 }
 
-/* ─── 分类板块（横向排列） ─── */
+/* ─── 分类板块（横向滚动） ─── */
 #character-grid {
     display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
+    flex-direction: column;
+    gap: 24px;
     padding-bottom: 60px;
 }
 
 .category-section {
-    flex: 1 1 320px;
-    min-width: 280px;
-    max-width: 100%;
     background: var(--ba-bg-card);
     border-radius: var(--ba-radius);
     box-shadow: var(--ba-shadow);
@@ -463,15 +460,53 @@ main {
     margin: 0 0 12px 0;
 }
 
+/* 横向滚动容器 */
 .category-section .character-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    display: flex;
     gap: 12px;
-    padding-bottom: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--ba-border) transparent;
 }
 
-#gsv-character-grid .category-section {
-    margin-bottom: 20px;
+.category-section .character-grid::-webkit-scrollbar {
+    height: 4px;
+}
+
+.category-section .character-grid::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.category-section .character-grid::-webkit-scrollbar-thumb {
+    background: var(--ba-border);
+    border-radius: 4px;
+}
+
+.category-section .character-card {
+    flex: 0 0 130px;
+    border-radius: 12px;
+    scroll-snap-align: start;
+}
+
+.category-section .char-card-body {
+    padding: 8px 10px;
+}
+
+.category-section .char-card-body h4 {
+    font-size: 12px;
+}
+
+.category-section .char-card-img {
+    aspect-ratio: 1;
+}
+
+.category-section .char-card-img-placeholder {
+    aspect-ratio: 1;
+    font-size: 28px;
 }
 
 #gsv-character-grid .category-header h3 {
@@ -1299,19 +1334,12 @@ main {
         font-size: 16px;
     }
 
-    #character-grid {
-        flex-direction: column;
-    }
-
     .category-section {
-        flex: 1 1 auto;
-        min-width: 0;
         padding: 14px 16px;
     }
 
-    .category-section .character-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
+    .category-section .character-card {
+        flex: 0 0 110px;
     }
 }
 
