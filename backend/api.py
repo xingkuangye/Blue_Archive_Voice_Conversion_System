@@ -564,6 +564,8 @@ async def gsv_tts(
     temperature: float = Form(None),
     top_k: int = Form(None),
 ):
+    if len(text) > 500:
+        raise HTTPException(status_code=400, detail=f"文本过长 ({len(text)} 字符)，最大支持 500 字符")
     from backend.gsv import load_config, switch_model, set_refer_audio, tts as gsv_tts_inner
     cfg = load_config()
     model_config = None

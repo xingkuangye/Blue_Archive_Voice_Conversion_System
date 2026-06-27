@@ -570,6 +570,7 @@ function deselectGSV() {
 async function generateGSVTTS() {
     var text = document.getElementById('gsv-text').value.trim();
     if (!text) { showToast('请输入文本'); return; }
+    if (text.length > 500) { showToast('文本过长（最多 500 字符）'); return; }
     if (!_gsvCurrentChar) { showToast('请选择 GSV 角色'); return; }
     var statusEl = document.getElementById('gsv-convert-status');
     var statusText = document.getElementById('gsv-status-text');
