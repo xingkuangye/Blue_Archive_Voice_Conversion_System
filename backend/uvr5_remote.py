@@ -71,7 +71,7 @@ async def _download_file(client: httpx.AsyncClient, api_url: str, file_path: str
     return b""
 
 
-async def separate_remote(audio_data: bytes, model_name: str = "mel_band_roformer") -> dict:
+async def separate_remote(audio_data: bytes, model_name: str = "mel_band_roformer", cb=None) -> dict:
     """
     调用远程 UVR5 人声分离
     返回: {"vocals": bytes, "instrumental": bytes, "status": str}
@@ -80,6 +80,7 @@ async def separate_remote(audio_data: bytes, model_name: str = "mel_band_roforme
     api_url = cfg["api_url"]
     timeout = cfg.get("timeout", 120)
 
+    if cb: cb(10, "上传音频到远程服务器...")
     async with httpx.AsyncClient(timeout=120) as client:
         # 上传音频文件
         files = {"audio": ("input.wav", audio_data, "audio/wav")}
@@ -98,10 +99,14 @@ async def separate_remote(audio_data: bytes, model_name: str = "mel_band_roforme
             raise RuntimeError(f"远程 UVR5 分离失败: {detail}")
 
         result = resp.json()
+        if cb: cb(50, "远程处理完成，下载人声...")
 
         # 下载结果文件
         vocals_bytes = await _download_file(client, api_url, result.get("vocals", ""))
+        if cb: cb(70, "下载背景音...")
         inst_bytes = await _download_file(client, api_url, result.get("instrumental", ""))
+
+        if cb: cb(90, "处理完成")
 
         return {
             "vocals": vocals_bytes,
@@ -110,7 +115,7 @@ async def separate_remote(audio_data: bytes, model_name: str = "mel_band_roforme
         }
 
 
-async def dereverb_remote(audio_data: bytes, overlap: int = 4) -> dict:
+async def dereverb_remote(audio_data: bytes, overlap: int = 4, cb=None) -> dict:
     """
     调用远程 UVR5 混响消除
     返回: {"dry": bytes, "reverb": bytes, "status": str}
@@ -119,6 +124,7 @@ async def dereverb_remote(audio_data: bytes, overlap: int = 4) -> dict:
     api_url = cfg["api_url"]
     timeout = cfg.get("timeout", 120)
 
+    if cb: cb(10, "上传音频到远程服务器...")
     async with httpx.AsyncClient(timeout=120) as client:
         files = {"audio": ("input.wav", audio_data, "audio/wav")}
         resp = await client.post(
@@ -138,7 +144,9 @@ async def dereverb_remote(audio_data: bytes, overlap: int = 4) -> dict:
         result = resp.json()
 
         dry_bytes = await _download_file(client, api_url, result.get("dry", ""))
+        if cb: cb(60, "下载混响成分...")
         reverb_bytes = await _download_file(client, api_url, result.get("reverb", ""))
+        if cb: cb(90, "处理完成")
 
         return {
             "dry": dry_bytes,

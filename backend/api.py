@@ -257,7 +257,7 @@ def task_uvr5_separate(params: dict, cb) -> dict:
             audio_path = params["audio_path"]
             with open(audio_path, "rb") as af:
                 audio_data = af.read()
-            result = asyncio.run(separate_remote(audio_data, params.get("model_name", "mel_band_roformer")))
+            result = asyncio.run(separate_remote(audio_data, params.get("model_name", "mel_band_roformer"), cb=cb))
             def save_stem(blob, stem):
                 p = f"temp/{stem}_{uu.uuid4().hex[:8]}.wav"
                 with open(p, "wb") as f:
@@ -311,7 +311,7 @@ def task_uvr5_dereverb(params: dict, cb) -> dict:
             audio_path = params["audio_path"]
             with open(audio_path, "rb") as af:
                 audio_data = af.read()
-            result = asyncio.run(dereverb_remote(audio_data, params.get("overlap", 4)))
+            result = asyncio.run(dereverb_remote(audio_data, params.get("overlap", 4), cb=cb))
             def save_stem(blob, stem):
                 p = f"temp/{stem}_{uu.uuid4().hex[:8]}.wav"
                 with open(p, "wb") as f:
