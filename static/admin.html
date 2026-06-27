@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blue Archive RVC Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Noto Sans SC', sans-serif; background: #f0f2f5; color: #333; }
+.navbar { background: #1a1a2e; color: #fff; padding: 12px 24px; display: flex; align-items: center; gap: 16px; }
+.navbar h1 { font-size: 18px; font-weight: 600; }
+.navbar a { color: #8899cc; text-decoration: none; font-size: 13px; margin-left: auto; }
+.navbar a:hover { color: #fff; }
+.container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+.card { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #eee; }
+.card-header h2 { font-size: 16px; font-weight: 600; }
+.badge { display: inline-block; padding: 2px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.badge-green { background: #e6f7e6; color: #389e0d; }
+.badge-gray { background: #f5f5f5; color: #999; }
+.badge-blue { background: #e6f0ff; color: #1a73e8; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { padding: 10px 8px; text-align: left; border-bottom: 1px solid #f0f0f0; }
+th { font-weight: 600; color: #666; font-size: 12px; }
+tr:hover { background: #fafafa; }
+.btn { display: inline-flex; align-items: center; gap: 4px; padding: 6px 14px; border: none; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+.btn-primary { background: #1a73e8; color: #fff; }
+.btn-primary:hover { background: #1557b0; }
+.btn-danger { background: #e8453c; color: #fff; }
+.btn-danger:hover { background: #cf3a32; }
+.btn-sm { padding: 4px 10px; font-size: 11px; }
+.btn-outline { background: transparent; border: 1px solid #d9d9d9; color: #666; }
+.btn-outline:hover { border-color: #1a73e8; color: #1a73e8; }
+.toggle { position: relative; width: 36px; height: 20px; cursor: pointer; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider { position: absolute; inset: 0; background: #ccc; border-radius: 10px; transition: 0.3s; }
+.toggle-slider::before { content: ''; position: absolute; width: 16px; height: 16px; left: 2px; bottom: 2px; background: #fff; border-radius: 50%; transition: 0.3s; }
+.toggle input:checked + .toggle-slider { background: #1a73e8; }
+.toggle input:checked + .toggle-slider::before { transform: translateX(16px); }
+.form-row { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+.form-group { flex: 1; min-width: 200px; }
+.form-group label { display: block; font-size: 12px; font-weight: 600; color: #666; margin-bottom: 4px; }
+.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 8px; font-size: 13px; font-family: inherit; outline: none; }
+.form-group input:focus, .form-group select:focus { border-color: #1a73e8; box-shadow: 0 0 0 2px rgba(26,115,232,0.15); }
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; justify-content: center; align-items: center; }
+.modal-overlay.active { display: flex; }
+.modal { background: #fff; border-radius: 16px; padding: 24px; width: 95%; max-width: 560px; max-height: 90vh; overflow-y: auto; }
+.modal h3 { font-size: 16px; margin-bottom: 16px; }
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 10px 20px; border-radius: 10px; font-size: 13px; z-index: 200; animation: fadeIn 0.3s; }
+@keyframes fadeIn { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+.empty-state { text-align: center; padding: 40px; color: #999; font-size: 14px; }
+.file-info { font-size: 12px; color: #666; margin-top: 4px; }
+.file-upload { border: 2px dashed #d9d9d9; border-radius: 8px; padding: 12px; text-align: center; cursor: pointer; font-size: 12px; color: #999; transition: 0.2s; }
+.file-upload:hover { border-color: #1a73e8; color: #1a73e8; }
+.file-upload.has-file { border-color: #389e0d; color: #389e0d; }
+.tabs { display: flex; gap: 4px; margin-bottom: 16px; }
+.tab { padding: 8px 20px; border: none; background: #f0f2f5; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; }
+.tab.active { background: #1a73e8; color: #fff; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+</style>
+</head>
+<body>
+<div class="navbar">
+    <h1>⚙️ Blue Archive RVC — 后台管理</h1>
+    <a href="/">← 返回前台</a>
+    <a href="#" onclick="logout()" style="margin-left:12px;color:#e8453c">🚪 退出</a>
+</div>
+<div class="container">
+
+<div class="tabs">
+    <button class="tab active" data-tab="categories" onclick="switchTab('categories')">分类管理</button>
+    <button class="tab" data-tab="models" onclick="switchTab('models')">模型管理</button>
+    <button class="tab" data-tab="gsv" onclick="switchTab('gsv')">GSV TTS</button>
+    <button class="tab" data-tab="remote" onclick="switchTab('remote')">远程 RVC</button>
+    <button class="tab" data-tab="settings" onclick="switchTab('settings')">系统状态</button>
+</div>
+
+<!-- 分类管理 -->
+<div id="tab-categories" class="tab-content active">
+    <div class="card">
+        <div class="card-header">
+            <h2>模型分类</h2>
+            <button class="btn btn-primary" onclick="showAddCategory()">+ 添加分类</button>
+        </div>
+        <div id="category-list"></div>
+    </div>
+</div>
+
+<!-- 模型管理 -->
+<div id="tab-models" class="tab-content">
+    <div class="card">
+        <div class="card-header">
+            <h2>模型列表</h2>
+            <div style="display:flex;gap:8px">
+                <select id="model-category-select" onchange="loadModels()" style="padding:6px 12px;border:1px solid #d9d9d9;border-radius:8px;font-size:13px;font-family:inherit"></select>
+                <button class="btn btn-primary" onclick="showAddModel()">+ 上传模型</button>
+            </div>
+        </div>
+        <div id="model-list"></div>
+    </div>
+</div>
+
+<!-- GSV TTS 管理 -->
+<div id="tab-gsv" class="tab-content">
+    <div class="card">
+        <div class="card-header">
+            <h2>GSV (GPT-SoVits) TTS</h2>
+            <div style="display:flex;gap:8px">
+                <button class="btn btn-outline" onclick="testGSV()">🔄 测试连接</button>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group" style="flex:1">
+                <label>API 地址</label>
+                <input id="gsv-api-url" value="http://frp-add.com:54565" style="font-family:monospace;font-size:12px">
+            </div>
+            <div class="form-group" style="flex:0 0 100px">
+                <label>超时(秒)</label>
+                <input id="gsv-timeout" value="60" type="number">
+            </div>
+            <div class="form-group" style="display:flex;align-items:flex-end">
+                <button class="btn btn-primary" onclick="saveGSVConfig()" style="margin-bottom:1px">保存</button>
+            </div>
+        </div>
+        <div id="gsv-status" style="font-size:13px;margin-top:8px;padding:8px 12px;background:#f5f5f5;border-radius:8px"></div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2>可用模型</h2>
+            <button class="btn btn-primary" onclick="showAddGSVModel()">+ 添加模型</button>
+        </div>
+        <div id="gsv-model-list">
+            <div class="empty-state">加载中...</div>
+        </div>
+        <div style="margin-top:12px;padding:12px;background:#fff8e1;border-radius:8px;font-size:12px;color:#8d6e00">
+            GSV 服务端不会暴露模型列表，需要您手动填写模型在服务端上的文件路径。
+            GPT 模型通常为 <code>.ckpt</code> 格式，SoVits 模型为 <code>.pth</code> 格式。
+        </div>
+    </div>
+</div><!-- 系统状态 -->
+<div id="tab-settings" class="tab-content">
+    <div class="card">
+        <div class="card-header"><h2>系统信息</h2></div>
+        <div id="sys-info" style="font-size:13px;line-height:1.8"></div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h2>临时文件</h2></div>
+        <div id="temp-info" style="font-size:13px"></div>
+    </div>
+</div>
+
+</div>
+
+<!-- 添加分类弹窗 -->
+<div id="add-category-modal" class="modal-overlay">
+    <div class="modal">
+        <h3>添加分类</h3>
+        <div class="form-row">
+            <div class="form-group"><label>分类Key</label><input id="cat-key" placeholder="如: my-models"></div>
+            <div class="form-group"><label>显示名称</label><input id="cat-title" placeholder="如: 我的模型"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label>文件夹路径</label><input id="cat-folder" placeholder="留空则使用 Key"></div>
+            <div class="form-group"><label>描述</label><input id="cat-desc" placeholder="可选"></div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+            <button class="btn btn-outline" onclick="closeModal('add-category-modal')">取消</button>
+            <button class="btn btn-primary" onclick="addCategory()">创建</button>
+        </div>
+    </div>
+</div>
+
+<!-- 上传模型弹窗 -->
+<div id="add-model-modal" class="modal-overlay">
+    <div class="modal">
+        <h3>上传新模型</h3>
+        <div class="form-row">
+            <div class="form-group"><label>角色名称</label><input id="model-name" placeholder="如: 白子-シロコ-Shiroko"></div>
+            <div class="form-group"><label>显示标题</label><input id="model-title" placeholder="如: Blue Archive - 白子 - 20 epochs"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label>作者</label><input id="model-author" placeholder="可选"></div>
+            <div class="form-group"><label>目标分类</label><select id="model-cat-select"></select></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>模型文件 (.pth)</label>
+                <div class="file-upload" id="model-file-upload" onclick="document.getElementById('model-file-input').click()">点击选择 .pth 模型文件</div>
+                <input id="model-file-input" type="file" accept=".pth" hidden onchange="onFilePick('model-file-input','model-file-upload')">
+                <div class="file-info" id="model-file-info"></div>
+            </div>
+            <div class="form-group">
+                <label>特征索引 (.index)</label>
+                <div class="file-upload" id="index-file-upload" onclick="document.getElementById('index-file-input').click()">点击选择 .index 文件</div>
+                <input id="index-file-input" type="file" accept=".index" hidden onchange="onFilePick('index-file-input','index-file-upload')">
+                <div class="file-info" id="index-file-info"></div>
+            </div>
+            <div class="form-group">
+                <label>角色封面图</label>
+                <div class="file-upload" id="cover-file-upload" onclick="document.getElementById('cover-file-input').click()">点击选择图片</div>
+                <input id="cover-file-input" type="file" accept="image/*" hidden onchange="onFilePick('cover-file-input','cover-file-upload')">
+                <div class="file-info" id="cover-file-info"></div>
+            </div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+            <button class="btn btn-outline" onclick="closeModal('add-model-modal')">取消</button>
+            <button class="btn btn-primary" onclick="uploadModel()">上传</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ─── 工具 ───
+function $(id) { return document.getElementById(id); }
+
+function toast(msg) {
+    var t = document.createElement('div');
+    t.className = 'toast'; t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(function() { t.remove(); }, 2500);
+}
+
+function showModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+function switchTab(name) {
+    document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+    document.querySelector('.tab[data-tab="' + name + '"]').classList.add('active');
+    document.getElementById('tab-' + name).classList.add('active');
+}
+
+function formatSize(bytes) {
+    if (!bytes || bytes === 0) return '-';
+    var units = ['B', 'KB', 'MB', 'GB'];
+    var i = 0;
+    var size = bytes;
+    while (size >= 1024 && i < 3) { size /= 1024; i++; }
+    return size.toFixed(i > 0 ? 1 : 0) + ' ' + units[i];
+}
+
+function onFilePick(inputId, uploadId) {
+    var input = $(inputId);
+    var upload = $(uploadId);
+    if (input.files && input.files[0]) {
+        upload.textContent = '✓ ' + input.files[0].name;
+        upload.classList.add('has-file');
+    }
+}
+
+// ─── API ───
+
+// Read password from sessionStorage (set by login page, cleared on tab close)
+function getAdminPwd() { return sessionStorage.getItem('admin_pwd') || ''; }
+
+// Redirect to login if not authenticated
+function requireAuth() {
+    if (!getAdminPwd()) {
+        window.location.href = '/admin/login';
+        return false;
+    }
+    return true;
+}
+
+async function api(method, url, body) {
+    if (!requireAuth()) return;
+    var opts = { method: method, headers: {} };
+    var pwd = getAdminPwd();
+    if (pwd) opts.headers['X-Admin-Password'] = pwd;
+    if (body instanceof FormData) {
+        opts.body = body;
+    } else if (body) {
+        opts.headers['Content-Type'] = 'application/json';
+        opts.body = JSON.stringify(body);
+    }
+    var resp = await fetch(url, opts);
+    if (resp.status === 401) { sessionStorage.removeItem('admin_pwd'); window.location.href = '/admin/login'; return; }
+    var data = await resp.json();
+    if (!resp.ok) throw new Error(data.detail || '请求失败');
+    return data;
+}
+
+// ─── 分类管理 ───
+async function loadCategories() {
+    try {
+        var data = await api('GET', '/api/admin/categories');
+        renderCategories(data.categories);
+        populateCategorySelects(data.categories);
+    } catch (e) { toast('加载失败: ' + e.message); }
+}
+
+function renderCategories(cats) {
+    var html = '<table><thead><tr><th>Key</th><th>标题</th><th>文件夹</th><th>角色数</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+    for (var i = 0; i < cats.length; i++) {
+        var c = cats[i];
+        var statusHtml = '<label class="toggle"><input type="checkbox" ' + (c.enable ? 'checked' : '') + ' onchange="toggleCategory(\'' + c.key + '\', this.checked)"><span class="toggle-slider"></span></label>';
+        html += '<tr><td><code>' + c.key + '</code></td><td>' + c.title + '</td><td><code>' + c.folder_path + '</code></td><td><span class="badge badge-blue">' + c.char_count + '</span></td><td>' + statusHtml + '</td>'
+            + '<td><button class="btn btn-danger btn-sm" onclick="deleteCategory(\'' + c.key + '\')">删除</button></td></tr>';
+    }
+    html += '</tbody></table>';
+    if (cats.length === 0) html = '<div class="empty-state">暂无分类，点击右上角添加</div>';
+    $('category-list').innerHTML = html;
+}
+
+function showAddCategory() {
+    $('cat-key').value = ''; $('cat-title').value = ''; $('cat-folder').value = ''; $('cat-desc').value = '';
+    showModal('add-category-modal');
+}
+
+async function addCategory() {
+    var fd = new FormData();
+    fd.append('key', $('cat-key').value.trim());
+    fd.append('title', $('cat-title').value.trim());
+    fd.append('folder_path', $('cat-folder').value.trim() || null);
+    fd.append('description', $('cat-desc').value.trim());
+    try {
+        await api('POST', '/api/admin/categories', fd);
+        toast('分类已创建');
+        closeModal('add-category-modal');
+        loadCategories();
+    } catch (e) { toast('失败: ' + e.message); }
+}
+
+async function toggleCategory(key, enable) {
+    var fd = new FormData(); fd.append('enable', enable);
+    await api('PUT', '/api/admin/categories/' + key + '/toggle', fd);
+}
+
+async function deleteCategory(key) {
+    if (!confirm('确定删除分类 "' + key + '" 吗？所有模型文件将被删除！')) return;
+    await api('DELETE', '/api/admin/categories/' + key);
+    toast('已删除');
+    loadCategories();
+}
+
+// ─── 模型管理 ───
+function populateCategorySelects(cats) {
+    var html = '<option value="">— 选择分类 —</option>';
+    for (var i = 0; i < cats.length; i++) {
+        html += '<option value="' + cats[i].key + '">' + cats[i].title + '</option>';
+    }
+    $('model-category-select').innerHTML = html;
+    $('model-cat-select').innerHTML = html;
+    if (cats.length > 0) {
+        $('model-category-select').value = cats[0].key;
+        loadModels();
+    }
+}
+
+async function loadModels() {
+    var key = $('model-category-select').value;
+    if (!key) { $('model-list').innerHTML = '<div class="empty-state">请选择分类</div>'; return; }
+    try {
+        var data = await api('GET', '/api/admin/categories/' + key + '/models');
+        renderModels(data.models, key);
+    } catch (e) { toast('加载失败: ' + e.message); }
+}
+
+function renderModels(models, catKey) {
+    var html = '<table><thead><tr><th>角色名称</th><th>标题</th><th>作者</th><th>模型大小</th><th>索引大小</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+    for (var i = 0; i < models.length; i++) {
+        var m = models[i];
+        var statusHtml = '<label class="toggle"><input type="checkbox" ' + (m.enable ? 'checked' : '') + ' onchange="toggleModel(\'' + catKey + '\',\'' + m.name + '\', this.checked)"><span class="toggle-slider"></span></label>';
+        html += '<tr>'
+            + '<td><strong>' + m.name + '</strong></td>'
+            + '<td>' + m.title + '</td>'
+            + '<td>' + (m.author || '-') + '</td>'
+            + '<td>' + formatSize(m.model_size) + '</td>'
+            + '<td>' + formatSize(m.index_size) + '</td>'
+            + '<td>' + statusHtml + '</td>'
+            + '<td><button class="btn btn-danger btn-sm" onclick="deleteModel(\'' + catKey + '\',\'' + m.name + '\')">删除</button></td>'
+            + '</tr>';
+    }
+    html += '</tbody></table>';
+    if (models.length === 0) html = '<div class="empty-state">该分类下暂无模型，点击"上传模型"添加</div>';
+    $('model-list').innerHTML = html;
+}
+
+function showAddModel() {
+    $('model-name').value = ''; $('model-title').value = ''; $('model-author').value = '';
+    $('model-file-input').value = ''; $('index-file-input').value = ''; $('cover-file-input').value = '';
+    $('model-file-upload').textContent = '点击选择 .pth 模型文件'; $('model-file-upload').className = 'file-upload';
+    $('index-file-upload').textContent = '点击选择 .index 文件'; $('index-file-upload').className = 'file-upload';
+    $('cover-file-upload').textContent = '点击选择图片'; $('cover-file-upload').className = 'file-upload';
+    showModal('add-model-modal');
+}
+
+async function uploadModel() {
+    var name = $('model-name').value.trim();
+    var title = $('model-title').value.trim();
+    var author = $('model-author').value.trim();
+    var cat = $('model-cat-select').value;
+    if (!name || !title || !cat) { toast('请填写必填项'); return; }
+
+    var fd = new FormData();
+    fd.append('char_name', name);
+    fd.append('title', title);
+    fd.append('author', author);
+
+    var mf = $('model-file-input').files[0];
+    var idxf = $('index-file-input').files[0];
+    var cf = $('cover-file-input').files[0];
+
+    if (mf) fd.append('model_file', mf);
+    if (idxf) fd.append('index_file', idxf);
+    if (cf) fd.append('cover_file', cf);
+
+    try {
+        await api('POST', '/api/admin/categories/' + cat + '/models', fd);
+        toast('模型已添加');
+        closeModal('add-model-modal');
+        loadModels();
+        loadCategories();
+    } catch (e) { toast('失败: ' + e.message); }
+}
+
+async function toggleModel(catKey, name, enable) {
+    var fd = new FormData(); fd.append('enable', enable);
+    await api('PUT', '/api/admin/categories/' + catKey + '/models/' + encodeURIComponent(name) + '/toggle', fd);
+}
+
+async function deleteModel(catKey, name) {
+    if (!confirm('确定删除模型 "' + name + '" 吗？')) return;
+    await api('DELETE', '/api/admin/categories/' + catKey + '/models/' + encodeURIComponent(name));
+    toast('已删除');
+    loadModels();
+    loadCategories();
+}
+
+// ─── 系统状态 ───
+async function loadSysInfo() {
+    try {
+        var h = await api('GET', '/api/health');
+        var html = '';
+        html += '🟢 运行状态: ' + (h.ml_available ? 'ML 可用' : 'ML 不可用') + '<br>';
+        html += '📦 API 版本: 2.0.0<br>';
+        html += '🕐 服务器时间: ' + new Date().toLocaleString('zh-CN') + '<br>';
+        $('sys-info').innerHTML = html;
+    } catch (e) { $('sys-info').innerHTML = '加载失败'; }
+
+    // Temp dir info
+    try {
+        var resp = await fetch('/');
+        var tempHtml = '临时文件目录: temp/<br>';
+        $('temp-info').innerHTML = tempHtml;
+    } catch (e) {}
+}
+
+function logout() { sessionStorage.removeItem('admin_pwd'); window.location.href = '/admin/login'; }
+
+// ─── 远程 RVC ───
+async function loadRvcRemoteConfig() {
+    try {
+        var data = await api('GET', '/api/admin/rvc_remote/config');
+        if (!data) return;
+        document.getElementById('rvc-remote-url').value = data.api_url || '';
+        document.getElementById('rvc-remote-key').value = data.api_key || '';
+        document.getElementById('rvc-remote-enabled').checked = data.enabled || false;
+        document.getElementById('rvc-remote-timeout').value = data.timeout || 120;
+        var status = document.getElementById('rvc-remote-status');
+        if (data.enabled && data.api_url) {
+            status.innerHTML = '配置已启用，将尝试远程处理';
+        } else if (!data.enabled) {
+            status.innerHTML = '远程 RVC 未启用';
+        } else {
+            status.innerHTML = '未配置 API 地址';
+        }
+    } catch(e) { console.error(e); }
+}
+
+async function saveRvcRemoteConfig() {
+    var fd = new FormData();
+    fd.append('api_url', document.getElementById('rvc-remote-url').value.trim());
+    fd.append('api_key', document.getElementById('rvc-remote-key').value);
+    fd.append('enabled', document.getElementById('rvc-remote-enabled').checked);
+    fd.append('timeout', parseInt(document.getElementById('rvc-remote-timeout').value) || 120);
+    try {
+        await api('PUT', '/api/admin/rvc_remote/config', fd);
+        toast('配置已保存');
+        loadRvcRemoteConfig();
+    } catch(e) { toast('失败: ' + e.message); }
+}
+
+async function testRvcRemote() {
+    var status = document.getElementById('rvc-remote-status');
+    status.innerHTML = '⏳ 测试连接中...';
+    try {
+        var data = await api('GET', '/api/admin/rvc_remote/check');
+        if (!data) return;
+        if (data.ok) {
+            status.innerHTML = '✅ ' + (data.message || '连接成功');
+        } else {
+            status.innerHTML = '❌ ' + (data.message || '连接失败');
+        }
+    } catch(e) {
+        status.innerHTML = '❌ ' + e.message;
+    }
+}
+
+
+// ─── GSV 管理 ───
+async function loadGSVConfig() {
+    try {
+        var data = await api('GET', '/api/admin/gsv/config');
+        if (!data) return;
+        document.getElementById('gsv-api-url').value = data.api_url || 'http://frp-add.com:54565';
+        document.getElementById('gsv-timeout').value = data.timeout || 60;
+        renderGSVModels(data.models || []);
+    } catch(e) { console.error(e); }
+}
+
+async function saveGSVConfig() {
+    var fd = new FormData();
+    fd.append('api_url', document.getElementById('gsv-api-url').value.trim());
+    fd.append('timeout', parseInt(document.getElementById('gsv-timeout').value) || 60);
+    await api('PUT', '/api/admin/gsv/config', fd);
+    toast('配置已保存');
+}
+
+async function testGSV() {
+    var url = document.getElementById('gsv-api-url').value.trim();
+    var status = document.getElementById('gsv-status');
+    status.innerHTML = '⏳ 测试连接中...';
+    try {
+        var resp = await fetch('/api/gsv/check?api_url=' + encodeURIComponent(url));
+        var data = await resp.json();
+        if (data.ok) {
+            status.innerHTML = '✅ ' + (data.message || '连接成功');
+        } else {
+            status.innerHTML = '❌ ' + (data.message || '连接失败');
+        }
+    } catch(e) {
+        status.innerHTML = '❌ ' + e.message;
+    }
+}
+
+function renderGSVModels(models) {
+    var html = '<table><thead><tr><th>名称</th><th>GPT 路径</th><th>SoVits 路径</th><th>语言</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+    for (var i = 0; i < models.length; i++) {
+        var m = models[i];
+        var escName = m.name.replace(/'/g, "\\'");
+        var statusHtml = '<label class="toggle"><input type="checkbox" ' + (m.enable !== false ? 'checked' : '') + ' onchange="toggleGSVModel(\'' + escName + '\', this.checked)"><span class="toggle-slider"></span></label>';
+        html += '<tr><td><strong>' + m.name + '</strong></td><td><code style="font-size:11px">' + m.gpt_path + '</code></td><td><code style="font-size:11px">' + m.sovits_path + '</code></td><td>' + (m.text_lang || 'zh') + '</td><td>' + statusHtml + '</td>'
+            + '<td>'
+            + '<button class="btn btn-outline btn-sm" onclick="editGSVModel(\'' + escName + '\')" style="margin-right:4px">编辑</button>'
+            + '<button class="btn btn-danger btn-sm" onclick="deleteGSVModel(\'' + escName + '\')">删除</button>'
+            + '</td></tr>';
+    }
+    html += '</tbody></table>';
+    if (models.length === 0) html = '<div class="empty-state">暂无 GSV 模型，点击上方按钮添加</div>';
+    document.getElementById('gsv-model-list').innerHTML = html;
+}
+
+function showAddGSVModel() {
+    document.getElementById('gsv-modal-title').textContent = '添加 GSV 模型';
+    document.getElementById('gsv-modal-submit').textContent = '添加';
+    document.getElementById('gsv-edit-original-name').value = '';
+    document.getElementById('gsv-model-name').value = '';
+    document.getElementById('gsv-gpt-path').value = '';
+    document.getElementById('gsv-sovits-path').value = '';
+    document.getElementById('gsv-ref-audio').value = '';
+    document.getElementById('gsv-prompt-text').value = '';
+    document.getElementById('gsv-prompt-lang').value = 'zh';
+    document.getElementById('gsv-text-lang').value = 'zh';
+    document.getElementById('gsv-cover-input').value = '';
+    document.getElementById('gsv-cover-url').value = '';
+    document.getElementById('gsv-cover-info').textContent = '';
+    document.getElementById('gsv-cover-upload').textContent = '点击选择图片（也可直接输入URL）';
+    document.getElementById('gsv-cover-upload').className = 'file-upload';
+    document.getElementById('gsv-cover-preview').style.display = 'none';
+    showModal('add-gsv-model-modal');
+}
+
+function onGSVCoverPick() {
+    var input = document.getElementById('gsv-cover-input');
+    var upload = document.getElementById('gsv-cover-upload');
+    var info = document.getElementById('gsv-cover-info');
+    if (input.files && input.files[0]) {
+        upload.textContent = '✓ ' + input.files[0].name;
+        upload.classList.add('has-file');
+        info.textContent = (input.files[0].size / 1024).toFixed(0) + ' KB';
+        // Preview
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('gsv-cover-img').src = e.target.result;
+            document.getElementById('gsv-cover-preview').style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+async function addGSVModel() {
+    var origName = document.getElementById('gsv-edit-original-name').value;
+    var isEdit = origName ? true : false;
+    var name = document.getElementById('gsv-model-name').value.trim();
+    var gptPath = document.getElementById('gsv-gpt-path').value.trim();
+    var sovitsPath = document.getElementById('gsv-sovits-path').value.trim();
+
+    var fd = new FormData();
+    fd.append('name', name);
+    fd.append('gpt_path', gptPath);
+    fd.append('sovits_path', sovitsPath);
+    fd.append('ref_audio_path', document.getElementById('gsv-ref-audio').value.trim());
+    fd.append('prompt_text', document.getElementById('gsv-prompt-text').value.trim());
+    fd.append('prompt_lang', document.getElementById('gsv-prompt-lang').value);
+    fd.append('text_lang', document.getElementById('gsv-text-lang').value);
+
+    // Cover: prefer uploaded file, fallback to URL
+    var coverFile = document.getElementById('gsv-cover-input').files[0];
+    var coverUrl = document.getElementById('gsv-cover-url').value.trim();
+    if (coverFile) fd.append('cover_file', coverFile);
+    else fd.append('cover', coverUrl);
+
+    try {
+        if (isEdit) {
+            // If name changed, delete old model first
+            if (origName !== name) {
+                await api('DELETE', '/api/admin/gsv/models/' + encodeURIComponent(origName));
+            }
+            // Always update with PATCH - send all fields
+            await api('PUT', '/api/admin/gsv/models/' + encodeURIComponent(isEdit && origName !== name ? name : (origName || name)), fd);
+            toast('模型已更新');
+        } else {
+            await api('POST', '/api/admin/gsv/models', fd);
+            toast('模型已添加');
+        }
+        closeModal('add-gsv-model-modal');
+        loadGSVConfig();
+    } catch(e) { toast('失败: ' + e.message); }
+}
+
+// Need to update the PUT handler on backend to accept all fields
+// For now, also add an edit mode function
+function showEditGSVModal(m) {
+    document.getElementById('gsv-modal-title').textContent = '编辑 GSV 模型 - ' + m.name;
+    document.getElementById('gsv-modal-submit').textContent = '保存';
+    document.getElementById('gsv-edit-original-name').value = m.name;
+    document.getElementById('gsv-model-name').value = m.name;
+    document.getElementById('gsv-gpt-path').value = m.gpt_path || '';
+    document.getElementById('gsv-sovits-path').value = m.sovits_path || '';
+    document.getElementById('gsv-ref-audio').value = m.ref_audio_path || '';
+    document.getElementById('gsv-prompt-text').value = m.prompt_text || '';
+    document.getElementById('gsv-prompt-lang').value = m.prompt_lang || 'zh';
+    document.getElementById('gsv-text-lang').value = m.text_lang || 'zh';
+    document.getElementById('gsv-cover-url').value = m.cover || '';
+    document.getElementById('gsv-cover-input').value = '';
+    document.getElementById('gsv-cover-info').textContent = '';
+    document.getElementById('gsv-cover-upload').textContent = '点击更换封面图';
+    document.getElementById('gsv-cover-upload').className = 'file-upload';
+    if (m.cover) {
+        var coverSrc = m.cover;
+        if (coverSrc.indexOf('gsv_covers') > -1) {
+            var parts = coverSrc.split('/');
+            coverSrc = '/api/download/gsv_covers/' + parts[parts.length - 1];
+        }
+        document.getElementById('gsv-cover-img').src = coverSrc;
+        document.getElementById('gsv-cover-preview').style.display = 'block';
+    } else {
+        document.getElementById('gsv-cover-preview').style.display = 'none';
+    }
+    showModal('add-gsv-model-modal');
+}
+
+function editGSVModel(escName) {
+    // Find the model from the list and populate modal
+    // We need to fetch the config to get model details
+    api('GET', '/api/admin/gsv/config').then(function(cfg) {
+        var models = cfg.models || [];
+        for (var i = 0; i < models.length; i++) {
+            if (models[i].name === escName) {
+                showEditGSVModal(models[i]);
+                return;
+            }
+        }
+        toast('模型未找到');
+    }).catch(function(e) { toast('加载失败: ' + e.message); });
+}
+
+async function toggleGSVModel(name, enable) {
+    var fd = new FormData();
+    fd.append('enable', enable);
+    await api('PUT', '/api/admin/gsv/models/' + encodeURIComponent(name), fd);
+}
+
+async function deleteGSVModel(name) {
+    if (!confirm('确定删除 GSV 模型 "' + name + '" 吗？')) return;
+    await api('DELETE', '/api/admin/gsv/models/' + encodeURIComponent(name));
+    toast('已删除');
+    loadGSVConfig();
+}
+
+// ─── 初始化 ───
+loadCategories();
+loadSysInfo();
+loadGSVConfig();
+loadRvcRemoteConfig();
+</script>
+
+<!-- 远程 RVC -->
+<div id="tab-remote" class="tab-content">
+    <div class="card">
+        <div class="card-header">
+            <h2>远程 RVC 服务器</h2>
+            <button class="btn btn-outline" onclick="testRvcRemote()">🔍 测试连接</button>
+        </div>
+        <div class="form-row">
+            <div class="form-group" style="flex:2">
+                <label>API 地址</label>
+                <input id="rvc-remote-url" placeholder="http://192.168.1.100:7860" style="font-family:monospace;font-size:12px">
+            </div>
+            <div class="form-group" style="flex:1">
+                <label>API Key</label>
+                <input id="rvc-remote-key" type="password" placeholder="留空则不鉴权">
+            </div>
+            <div class="form-group" style="flex:0 0 80px">
+                <label>超时(秒)</label>
+                <input id="rvc-remote-timeout" value="120" type="number">
+            </div>
+            <div class="form-group" style="display:flex;align-items:flex-end;gap:4px">
+                <label class="toggle" style="margin-bottom:1px">
+                    <input type="checkbox" id="rvc-remote-enabled" onchange="saveRvcRemoteConfig()">
+                    <span class="toggle-slider"></span>
+                </label>
+                <span style="font-size:12px;color:#666">启用</span>
+            </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn btn-primary" onclick="saveRvcRemoteConfig()">保存配置</button>
+        </div>
+        <div id="rvc-remote-status" style="font-size:13px;margin-top:12px;padding:8px 12px;background:#f5f5f5;border-radius:8px"></div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h2>说明</h2></div>
+        <div style="font-size:13px;line-height:1.8;color:#666">
+            <p>配置远程 RVC 服务后，变声转换和人声分离任务将优先发送到远程服务器处理。</p>
+            <p>如果远程服务不可用，自动回退到本地处理。</p>
+            <p>远程服务器需要运行相同的 Blue Archive RVC 服务，并开放 API 端口。</p>
+            <p>远程服务需设置环境变量 <code>RVC_API_KEY=xxx</code> 来启用 API 鉴权。</p>
+        </div>
+    </div>
+</div>
+
+<!-- 添加 GSV 模型弹窗 -->
+<div id="add-gsv-model-modal" class="modal-overlay">
+    <div class="modal">
+        <h3 id="gsv-modal-title">添加 GSV 模型</h3>
+        <input type="hidden" id="gsv-edit-original-name">
+        <div class="form-row">
+            <div class="form-group"><label>模型名称</label><input id="gsv-model-name" placeholder="如: 凯伊 (GSV)"></div>
+            <div class="form-group"><label>GPT 模型路径</label><input id="gsv-gpt-path" placeholder="GPT_SoVITS/weights/xxx.ckpt"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label>SoVits 模型路径</label><input id="gsv-sovits-path" placeholder="GPT_SoVITS/weights/xxx.pth"></div>
+            <div class="form-group"><label>参考音频路径</label><input id="gsv-ref-audio" placeholder="GPT_SoVITS/xxx.wav"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label>提示文本 (prompt_text)</label><input id="gsv-prompt-text" placeholder="可选"></div>
+            <div class="form-group"><label>提示语言</label><select id="gsv-prompt-lang"><option value="zh">中文</option><option value="ja">日文</option><option value="en">英文</option></select></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label>TTS 语言</label><select id="gsv-text-lang"><option value="zh">中文</option><option value="ja">日文</option><option value="en">英文</option></select></div>
+            <div class="form-group">
+                <label>封面图</label>
+                <div class="file-upload" id="gsv-cover-upload" onclick="document.getElementById('gsv-cover-input').click()">点击选择图片（也可直接输入URL）</div>
+                <input id="gsv-cover-input" type="file" accept="image/*" hidden onchange="onGSVCoverPick()">
+                <div class="file-info" id="gsv-cover-info"></div>
+                <input id="gsv-cover-url" placeholder="或输入封面图片URL" style="width:100%;margin-top:4px;padding:6px 10px;border:1px solid #d9d9d9;border-radius:6px;font-size:12px;font-family:inherit">
+            </div>
+        </div>
+        <div id="gsv-cover-preview" style="display:none;margin-bottom:8px;text-align:center">
+            <img id="gsv-cover-img" style="max-width:120px;max-height:120px;border-radius:8px">
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+            <button class="btn btn-outline" onclick="closeModal('add-gsv-model-modal')">取消</button>
+            <button class="btn btn-primary" id="gsv-modal-submit" onclick="addGSVModel()">添加</button>
+        </div>
+    </div>
+</div>
+
+
+
+</html>

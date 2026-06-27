@@ -1,0 +1,130 @@
+{
+    "凯伊-ケイ-Kei": {
+        "enable": true,
+        "model_path": "key_e20_s540.pth",
+        "title": "Blue Archive - 凯伊-ケイ-Kei - 20 epochs",
+        "cover": "CH0335_spr_Idle_01_1.9669999999995333.png",
+        "feature_retrieval_library": "added_IVF733_Flat_nprobe_1_key_v2.index",
+        "author": "星星旁の旷野"
+    },
+    "桃-モモイ-Momoi": {
+        "enable": true,
+        "model_path": "Momoi.pth",
+        "title": "Blue Archive - 桃-モモイ-Momoi - 20 epochs",
+        "cover": "momoi_spr_Idle_01_1.3681000000005588.png",
+        "feature_retrieval_library": "added_IVF1160_Flat_nprobe_1_Momoi_v2.index",
+        "author": "星星旁の旷野"
+    },
+    "绿-ミドリ-Midori": {
+        "enable": true,
+        "model_path": "Midori.pth",
+        "title": "Blue Archive - 绿-ミドリ-Midori - 20 epochs",
+        "cover": "midori_spr_Idle_01_1.6660000000002335.png",
+        "feature_retrieval_library": "added_IVF950_Flat_nprobe_1_Midori_v2.index",
+        "author": "星星旁の旷野"
+    },
+    "柚子-ユズ-Yuzu": {
+        "enable": true,
+        "model_path": "Yuzu.pth",
+        "title": "Blue Archive - 柚子-ユズ-Yuzu - 20 epochs",
+        "cover": "yuzu_spr_Idle_01_2.5168999999999033.png",
+        "feature_retrieval_library": "added_IVF1584_Flat_nprobe_1_Yuzu_v2.index",
+        "author": "星星旁の旷野"
+    },
+    "爱丽丝-アリス-Aris": {
+        "enable": true,
+        "model_path": "Aris.pth",
+        "title": "Blue Archive - 爱丽丝-アリス-Aris - 20 epochs",
+        "cover": "aris_spr_Idle_01_0.7572330154404199.png",
+        "feature_retrieval_library": "added_IVF1345_Flat_nprobe_1_Aris_v2.index",
+        "author": "星星旁の旷野"
+    },
+    "诺亚-ノア-Noa": {
+        "enable": true,
+        "model_path": "Noa.pth",
+        "title": "Blue Archive - 诺亚-ノア-Noa - 20 epochs",
+        "cover": "CH0095_spr_Idle_01_1.0511000000000927.png",
+        "feature_retrieval_library": "added_IVF1008_Flat_nprobe_1_Noa_v2.index",
+        "author": "星星旁の旷野"
+    },
+    "真纪-マキ-Maki": {
+        "enable": true,
+        "model_path": "Maki.pth",
+        "title": "Blue Archive - 真纪-マキ-Maki - 20 epochs",
+        "cover": "maki_spr_Idle_01_1.3012999999999875.png",
+        "feature_retrieval_library": "added_IVF330_Flat_nprobe_1_Maki_v2.index",
+        "author": "星星旁の旷野"
+    },
+    "和纱-カズサ-Kazusa": {
+        "enable": true,
+        "model_path": "Kazusa.pth",
+        "title": "Blue Archive - 和纱-カズサ-Kazusa - 20 epochs",
+        "cover": "kazusa_spr_Idle_01_2.1849999999999423.png",
+        "feature_retrieval_library": "added_IVF852_Flat_nprobe_1_Kazusa_v2.index",
+        "author": "星星旁の旷野"
+    },
+    "未花-ミカ-Mika": {
+        "enable": true,
+        "model_path": "Mika.pth",
+        "title": "Blue Archive - 未花-ミカ-Mika - 20 epochs",
+        "cover": "CH0069_spr_Idle_01_1.1845000000001165.png",
+        "feature_retrieval_library": "added_IVF958_Flat_nprobe_1_Mika_v2.index",
+        "author": "星星旁の旷野"
+    },
+    "渚-ナギサ-Nagisa": {
+        "enable": true,
+        "model_path": "Nagisa.pth",
+        "title": "Blue Archive - 渚-ナギサ-Nagisa - 20 epochs",
+        "cover": "nagisa_spr_Idle_01_1.533099999999628.png",
+        "feature_retrieval_library": "added_IVF997_Flat_nprobe_1_Nagisa_v2.index",
+        "author": "星星旁の旷野"
+    },
+    "圣娅-セイア-Seia": {
+        "enable": true,
+        "model_path": "Seia.pth",
+        "title": "Blue Archive - 圣娅-セイア-Seia - 20 epochs",
+        "cover": "CH0070_spr_Idle_01_1.6519000000000015.png",
+        "feature_retrieval_library": "added_IVF1070_Flat_nprobe_1_Seia_v2.index",
+        "author": "星星旁の旷野"
+    },
+    "泉奈-イズナ-Izuna": {
+        "enable": true,
+        "model_path": "Izuna.pth",
+        "title": "Blue Archive - 泉奈-イズナ-Izuna - 20 epochs",
+        "cover": "izuna_spr_Idle_01_1.6342999999998131.png",
+        "feature_retrieval_library": "added_IVF1070_Flat_nprobe_1_Izuna_v2.index",
+        "author": "星星旁の旷野"
+    },
+    "律-リツ-Ritsu": {
+        "enable": true,
+        "model_path": "Ritsu.pth",
+        "title": "Blue Archive - 律-リツ-Ritsu - 450 epochs",
+        "cover": "CH0319_spr_Idle_01_1.3012000000029798.png",
+        "feature_retrieval_library": "added_IVF339_Flat_nprobe_1_Ritsu_v2.index",
+        "author": "星星旁の旷野"
+    },
+    "玛丽-マリー-Mari": {
+        "enable": true,
+        "model_path": "Mari.pth",
+        "title": "Blue Archive - 玛丽-マリー-Mari - 20 epochs",
+        "cover": "mari_spr_Idle_01_1.6653999999761584.png",
+        "feature_retrieval_library": "added_IVF1034_Flat_nprobe_1_Mari_v2.index",
+        "author": "星星旁の旷野"
+    },
+    "普拉娜-プラナ-Plana": {
+        "enable": true,
+        "model_path": "Plana.pth",
+        "title": "Blue Archive - 普拉娜-プラナ-Plana - 450 epochs",
+        "cover": "NP0035_spr_Idle_01_2.318999999999997.png",
+        "feature_retrieval_library": "added_IVF409_Flat_nprobe_1_Plana_v2.index",
+        "author": "星星旁の旷野"
+    },
+    "美咲-ミサキ-Misaki": {
+        "enable": true,
+        "model_path": "Misaki.pth",
+        "title": "Blue Archive - 美咲-ミサキ-Misaki - 20 epochs",
+        "cover": "misaki_spr_Idle_01_1.3992999999998137.png",
+        "feature_retrieval_library": "added_IVF684_Flat_nprobe_1_Misaki_v2.index",
+        "author": "星星旁の旷野"
+    }
+}

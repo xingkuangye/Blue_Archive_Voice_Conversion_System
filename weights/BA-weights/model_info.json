@@ -1,0 +1,10 @@
+{
+    "优香": {
+        "enable": true,
+        "model_path": "model.pth",
+        "title": "Blue Archive - 优香 - 46 epochs",
+        "cover": "yuuka_spr_Idle_01_0.9177000000000041.png",
+        "feature_retrieval_library": "model.index",
+        "author": "1377306352"
+    }
+}

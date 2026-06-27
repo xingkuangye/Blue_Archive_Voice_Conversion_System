@@ -1,0 +1,14 @@
+{
+  "blue-archive": {
+    "enable": true,
+    "title": "Blue Archive",
+    "folder_path": "blue-archive",
+    "description": "模型可前往 http://file.xingkuangye.com 下载。使用需遵循 http://file.xingkuangye.com/blue-archive/LICENSE 协议"
+  },
+  "BA-weights": {
+    "enable": true,
+    "title": "BA-weights",
+    "folder_path": "BA-weights",
+    "description": ""
+  }
+}

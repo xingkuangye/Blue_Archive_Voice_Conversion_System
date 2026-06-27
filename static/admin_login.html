@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Login - Blue Archive RVC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.login-card {
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 40px;
+    width: 380px;
+    max-width: 90%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+}
+.login-card h1 {
+    color: #fff;
+    font-size: 20px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 8px;
+}
+.login-card .subtitle {
+    color: rgba(255,255,255,0.5);
+    font-size: 13px;
+    text-align: center;
+    margin-bottom: 28px;
+}
+.form-group { margin-bottom: 16px; }
+.form-group label {
+    display: block;
+    color: rgba(255,255,255,0.7);
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 6px;
+}
+.form-group input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 10px;
+    background: rgba(255,255,255,0.06);
+    color: #fff;
+    font-size: 15px;
+    font-family: inherit;
+    outline: none;
+    transition: 0.2s;
+}
+.form-group input:focus {
+    border-color: #4a90d9;
+    box-shadow: 0 0 0 3px rgba(74,144,217,0.2);
+}
+.form-group input::placeholder { color: rgba(255,255,255,0.3); }
+.btn-login {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #4a90d9, #6db3f2);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: 0.2s;
+}
+.btn-login:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(74,144,217,0.35); }
+.error-msg {
+    color: #ff6b6b;
+    font-size: 13px;
+    text-align: center;
+    margin-top: 12px;
+    display: none;
+}
+.error-msg.show { display: block; }
+.loading {
+    display: none;
+    text-align: center;
+    color: rgba(255,255,255,0.5);
+    font-size: 13px;
+    margin-top: 12px;
+}
+.loading.show { display: block; }
+.spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-top-color: #4a90d9;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="login-card">
+    <h1>⚙️ 后台管理</h1>
+    <p class="subtitle">Blue Archive RVC</p>
+    <div class="form-group">
+        <label>管理员密码</label>
+        <input type="password" id="pwd-input" placeholder="输入密码" onkeydown="if(event.key==='Enter')login()">
+    </div>
+    <button class="btn-login" onclick="login()">登录</button>
+    <div class="error-msg" id="error-msg">密码错误</div>
+    <div class="loading" id="loading"><span class="spinner"></span>验证中...</div>
+</div>
+<script>
+function login() {
+    var pwd = document.getElementById('pwd-input').value.trim();
+    if (!pwd) { showError('请输入密码'); return; }
+    document.getElementById('error-msg').classList.remove('show');
+    document.getElementById('loading').classList.add('show');
+
+    var fd = new FormData();
+    fd.append('password', pwd);
+    fetch('/api/admin/login', { method: 'POST', body: fd })
+        .then(function(r) {
+            if (r.status === 401) { showError('密码错误'); throw null; }
+            return r.json();
+        })
+        .then(function(d) {
+            if (d.ok) {
+                // Store in sessionStorage (cleared when browser tab closes)
+                sessionStorage.setItem('admin_pwd', pwd);
+                window.location.href = '/admin';
+            } else {
+                showError('密码错误');
+            }
+        })
+        .catch(function(e) {
+            if (e !== null) showError('验证失败');
+        })
+        .finally(function() {
+            document.getElementById('loading').classList.remove('show');
+        });
+}
+
+function showError(msg) {
+    document.getElementById('error-msg').textContent = msg;
+    document.getElementById('error-msg').classList.add('show');
+}
+</script>
+</body>
+</html>

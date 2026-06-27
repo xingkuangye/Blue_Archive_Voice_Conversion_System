@@ -1,0 +1,38 @@
+AI Model Usage and Content Distribution License Agreement
+Version 1.1
+
+1. Definitions
+
+· The Model: All files comprising this AI model, including but not limited to weight files, configuration files, tokenizer files, and any other components required to operate the model.
+· Generated Content: Any output—such as text, images, audio, video, or other data—created directly or indirectly through the use of this model.
+
+2. Rights Granted
+2.1 You are permitted to:
+
+· Download and use the Model for any lawful purpose.
+· Create derivative models based on this Model for personal or internal use.
+· Freely use, copy, distribute, display, perform, and commercialize any Generated Content produced by this Model, without restriction.
+
+3. Core Restrictions
+3.1 No Redistribution of the Model:
+You may not distribute, publish, share, or otherwise make available the Model files (in original or modified form) to any third party. This prohibition includes, but is not limited to:
+
+· Providing internet download links.
+· Bundling the Model within a software package or container.
+· Distributing via physical media.
+· Re-publishing on hosting platforms (e.g., GitHub, Hugging Face, etc.).
+
+3.2 No Circumvention:
+You may not bypass these redistribution restrictions through technical means (e.g., by wrapping the Model in an API, web service, or containerized application that effectively grants third parties access to the Model files).
+
+4. Attribution
+No attribution is required to the Model or its authors when using, sharing, or publishing Generated Content.
+
+5. Disclaimer
+THE MODEL IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE MODEL OR THE USE OR OTHER DEALINGS IN THE MODEL.
+
+6. Termination
+Violation of the restrictions in Section 3 will result in automatic termination of this license. Upon termination, you must cease all use of the Model and delete all copies in your possession or control.
+
+7. Governing Law
+[Specify jurisdiction, e.g.,] This Agreement shall be governed by and construed in accordance with the laws of the State of California, without regard to its conflict of law principles.

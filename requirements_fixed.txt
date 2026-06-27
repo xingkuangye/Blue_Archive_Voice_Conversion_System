@@ -1,0 +1,23 @@
+wheel
+setuptools
+ffmpeg
+torch
+numba==0.56.4
+numpy==1.23.5
+scipy==1.9.3
+librosa==0.9.1
+faiss-cpu==1.7.3
+gradio==3.36.1
+pyworld>=0.3.2
+soundfile>=0.12.1
+praat-parselmouth>=0.4.2
+httpx
+tensorboard
+tensorboardX
+torchcrepe
+onnxruntime
+demucs
+edge-tts
+yt_dlp
+# 注释掉fairseq，因为有兼容性问题，需要手动安装
+# fairseq==0.12.2

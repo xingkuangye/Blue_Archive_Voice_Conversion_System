@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blue Archive RVC</title>
+    <link rel="stylesheet" href="/static/css/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-inner">
+            <div class="nav-brand">
+                <div class="brand-halo"></div>
+                <span class="brand-text">Blue Archive</span>
+                <span class="brand-sub">RVC</span>
+            </div>
+            <div class="nav-links">
+                <a class="nav-link active" data-page="home" href="#home">首页</a>
+                <a class="nav-link" data-page="studio" href="#studio">变声工作室</a>
+                <a class="nav-link" data-page="uvr5" href="#uvr5">人声分离</a>
+                <a class="nav-link" data-page="gsv" href="#gsv">GSV TTS</a>
+            </div>
+        </div>
+    </nav>
+
+    <main id="app">
+
+        <!-- 首页 -->
+        <section id="page-home" class="page active">
+            <div class="hero">
+                <div class="hero-halo"></div>
+                <h1 class="hero-title">Blue Archive</h1>
+                <p class="hero-sub">Voice Conversion System</p>
+                <p class="hero-desc">选择您喜爱的 Blue Archive 角色，用他们的声音说话或唱歌</p>
+                <button class="btn-primary btn-glow" onclick="navigateTo('studio')">
+                    开始体验
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
+            </div>
+            <div class="section-header">
+                <h2>角色一览</h2>
+                <p>点击角色进入变声工作室</p>
+            </div>
+            <div id="character-grid" class="character-grid">
+            </div>
+        </section>
+
+        <!-- 变声工作室 -->
+        <section id="page-studio" class="page">
+            <div class="studio-layout">
+                <div class="studio-sidebar">
+                    <button class="btn-back" onclick="navigateTo('home')">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> 返回
+                    </button>
+                    <div id="studio-character-card" class="character-card-large">
+                        <div class="char-card-cover" id="studio-cover"><div class="char-card-placeholder">选择角色</div></div>
+                        <h3 id="studio-char-name" class="char-card-name">—</h3>
+                        <p id="studio-char-info" class="char-card-info"></p>
+                    </div>
+                    <div class="char-select-dropdown">
+                        <label>切换角色</label>
+                        <select id="studio-char-select" onchange="onStudioCharChange()"><option value="">— 选择角色 —</option></select>
+                    </div>
+                </div>
+                <div class="studio-main">
+                    <div class="panel-section">
+                        <h3 class="panel-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> 音频输入</h3>
+                        <div class="input-tabs">
+                            <button class="input-tab active" data-mode="upload" onclick="setInputMode('upload')">上传文件</button>
+                            <button class="input-tab" data-mode="tts" onclick="setInputMode('tts')">Edge-TTS</button>
+                        </div>
+                        <div id="input-upload" class="input-panel active">
+                            <div class="upload-zone" onclick="document.getElementById('file-input').click()">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4A90D9" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                <p>拖拽或点击上传音频文件</p>
+                                <span class="upload-hint">支持 MP3 / WAV / M4A / FLAC</span>
+                            </div>
+                            <input id="file-input" type="file" accept="audio/*" onchange="onFileSelected(event)" hidden />
+                            <div id="file-info" class="file-info" style="display:none"><span id="file-name"></span><button class="btn-sm" onclick="clearFile()">移除</button></div>
+                        </div>
+                        <div id="input-tts" class="input-panel">
+                            <textarea id="tts-text" class="tts-input" placeholder="输入要转换为语音的文字..." rows="3"></textarea>
+                            <div class="tts-voice-select"><label>选择基底语音</label><select id="tts-voice"></select></div>
+                            <button class="btn-secondary" onclick="generateTTS()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> 生成语音</button>
+                        </div>
+                    </div>
+                    <div class="panel-section">
+                        <h3 class="panel-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15..."/></svg> 转换参数</h3>
+                        <div class="params-grid">
+                            <div class="param-item"><label>升/降调 <span class="param-val" id="val-f0">0</span></label><input type="range" min="-12" max="12" value="0" step="1" oninput="updateParam('f0',this.value)" /><span class="param-desc">例：+12 男声变女声</span></div>
+                            <div class="param-item"><label>检索特征占比 <span class="param-val" id="val-index">0.7</span></label><input type="range" min="0" max="1" value="0.7" step="0.05" oninput="updateParam('index',this.value)" /></div>
+                            <div class="param-item"><label>中值滤波半径 <span class="param-val" id="val-filter">3</span></label><input type="range" min="0" max="7" value="3" step="1" oninput="updateParam('filter',this.value)" /><span class="param-desc">≥3 启用，可削弱哑音</span></div>
+                            <div class="param-item"><label>音量包络融合 <span class="param-val" id="val-rms">1.0</span></label><input type="range" min="0" max="1" value="1" step="0.05" oninput="updateParam('rms',this.value)" /></div>
+                            <div class="param-item"><label>清辅音保护 <span class="param-val" id="val-protect">0.5</span></label><input type="range" min="0" max="0.5" value="0.5" step="0.01" oninput="updateParam('protect',this.value)" /><span class="param-desc">0.5 不开启，降低可减少电音</span></div>
+                            <div class="param-item"><label>重采样率 <span class="param-val" id="val-resample">0</span></label><input type="range" min="0" max="48000" value="0" step="1000" oninput="updateParam('resample',this.value)" /><span class="param-desc">0 为不重采样</span></div>
+                        </div>
+                        <div class="param-item f0-method"><label>音频处理算法</label><div class="f0-options"><label class="f0-option"><input type="radio" name="f0method" value="pm" onchange="updateParam('f0method',this.value)" /><span>PM <small>快速</small></span></label><label class="f0-option"><input type="radio" name="f0method" value="harvest" onchange="updateParam('f0method',this.value)" /><span>Harvest <small>效果好</small></span></label><label class="f0-option"><input type="radio" name="f0method" value="rmvpe" checked onchange="updateParam('f0method',this.value)" /><span>RMVPE <small>最佳</small></span></label></div></div>
+                    </div>
+                    <div class="panel-section output-section">
+                        <button id="btn-convert" class="btn-primary btn-convert" onclick="startConvert()" disabled><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg> 开始转换</button>
+                        <div id="convert-status" class="convert-status" style="display:none"><div class="status-spinner"></div><span id="status-text">处理中...</span><div class="progress-bar-wrap" id="convert-progress-wrap" style="display:none"><div class="progress-bar" id="convert-progress-bar"></div></div></div>
+                        <div id="output-area" class="output-area" style="display:none">
+                            <h4>输出结果</h4>
+                            <div id="output-info" class="output-info"></div>
+                            <div class="output-player"><audio id="output-audio" controls></audio></div>
+                            <a id="download-link" class="btn-download" download="converted.wav"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> 下载音频</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- UVR5 -->
+        <section id="page-uvr5" class="page">
+            <div class="section-header"><h2>音频处理工具</h2><p>人声分离 · 混响消除</p></div>
+            <div class="uvr5-tabs">
+                <button class="input-tab active" data-uvr5tab="separate" onclick="setUVR5Tab('separate')">人声分离</button>
+                <button class="input-tab" data-uvr5tab="dereverb" onclick="setUVR5Tab('dereverb')">混响消除</button>
+            </div>
+            <div id="uvr5-separate" class="uvr5-tab-content active">
+                <div class="uvr5-layout">
+                    <div class="uvr5-input">
+                        <div class="upload-zone" onclick="document.getElementById('uvr5-file-input').click()"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4A90D9" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><p>上传要分离的音频</p></div>
+                        <input id="uvr5-file-input" type="file" accept="audio/*" onchange="onUVR5FileSelected(event)" hidden />
+                        <div id="uvr5-file-info" class="file-info" style="display:none"><span id="uvr5-file-name"></span><button class="btn-sm" onclick="clearUVR5File()">移除</button></div>
+                        <div class="param-item"><label>分离模型</label><select id="uvr5-model" class="param-select"><option value="mel_band_roformer">MelBand Roformer (人声专用) ★</option><option value="htdemucs">HTDemucs (通用分离)</option><option value="htdemucs_ft">HTDemucs FT (高精度)</option></select></div>
+                        <button id="btn-uvr5" class="btn-primary" onclick="startUVR5()" disabled><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> 开始分离</button>
+                    </div>
+                    <div class="uvr5-output">
+                        <div id="uvr5-results" style="display:none">
+                            <div class="uvr5-result-card"><h4>人声 (Vocals)</h4><audio id="uvr5-vocals" controls></audio></div>
+                            <div class="uvr5-result-card"><h4>背景音 (Instrumental)</h4><audio id="uvr5-instrumental" controls></audio></div>
+                            <div id="uvr5-status-area" class="convert-status" style="display:none"><div class="status-spinner"></div><span id="uvr5-status-text">处理中...</span></div>
+                            <div class="progress-bar-wrap" id="uvr5-progress-wrap" style="display:none"><div class="progress-bar" id="uvr5-progress-bar"></div></div>
+                            <div id="uvr5-status" class="output-info"></div>
+                        </div>
+                        <div id="uvr5-placeholder" class="uvr5-placeholder"><p>上传音频后点击「开始分离」</p></div>
+                    </div>
+                </div>
+            </div>
+            <div id="uvr5-dereverb" class="uvr5-tab-content">
+                <div class="uvr5-layout">
+                    <div class="uvr5-input">
+                        <div class="upload-zone" onclick="document.getElementById('dereverb-file-input').click()"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4A90D9" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><p>上传带混响的音频</p><span class="upload-hint">MDX23C De-Reverb by aufr33-jarredou</span></div>
+                        <input id="dereverb-file-input" type="file" accept="audio/*" onchange="onDeReverbFileSelected(event)" hidden />
+                        <div id="dereverb-file-info" class="file-info" style="display:none"><span id="dereverb-file-name"></span><button class="btn-sm" onclick="clearDeReverbFile()">移除</button></div>
+                        <div class="param-item"><label>重叠倍数 <span class="param-val" id="val-overlap">4</span></label><input type="range" min="2" max="8" value="4" step="1" oninput="document.getElementById('val-overlap').textContent=this.value;state.dereverbOverlap=parseInt(this.value)" /><span class="param-desc">越大质量越高但越慢</span></div>
+                        <button id="btn-dereverb" class="btn-primary" onclick="startDeReverb()" disabled><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> 消除混响</button>
+                    </div>
+                    <div class="uvr5-output">
+                        <div id="dereverb-results" style="display:none">
+                            <div class="uvr5-result-card"><h4>干声 (去混响后)</h4><audio id="dereverb-dry" controls></audio></div>
+                            <div class="uvr5-result-card"><h4>混响成分 (被移除)</h4><audio id="dereverb-reverb" controls></audio></div>
+                            <div id="dereverb-status-area" class="convert-status" style="display:none"><div class="status-spinner"></div><span id="dereverb-status-text">处理中...</span></div>
+                            <div class="progress-bar-wrap" id="dereverb-progress-wrap" style="display:none"><div class="progress-bar" id="dereverb-progress-bar"></div></div>
+                            <div id="dereverb-status" class="output-info"></div>
+                        </div>
+                        <div id="dereverb-placeholder" class="uvr5-placeholder"><p>上传音频后点击「消除混响」</p></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- GSV TTS -->
+        <section id="page-gsv" class="page">
+            <div class="section-header">
+                <h2>GSV TTS</h2>
+                <p>GPT-SoVits 远程语音合成</p>
+                <div id="gsv-connection-status" style="font-size:13px;margin-top:4px">⏳ 检测服务状态...</div>
+            </div>
+
+                        <div class="section-header" style="padding:8px 0 16px">
+                <h2 style="font-size:18px">选择角色</h2>
+            </div>
+            <div id="gsv-character-grid" class="character-grid">
+                <!-- 由 JS 动态渲染 -->
+            </div>
+
+            <!-- 合成面板 -->
+            <div id="gsv-studio-panel" style="display:none">
+            <div class="studio-layout">
+                <div class="studio-sidebar">
+                    <button class="btn-back" onclick="deselectGSV()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                        返回角色列表
+                    </button>
+                    <div class="character-card-large">
+                        <div class="char-card-cover" id="gsv-cover" style="aspect-ratio:1">
+                            <div class="char-card-placeholder" style="font-size:48px">🎤</div>
+                        </div>
+                        <h3 id="gsv-model-display" class="char-card-name" style="text-align:center">GPT-SoVits</h3>
+                        <p id="gsv-model-desc" class="char-card-info" style="text-align:center">远程语音合成引擎</p>
+                    </div>
+
+                </div>
+
+                <div class="studio-main">
+                    <div class="panel-section">
+                        <h3 class="panel-title">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                            语音合成
+                        </h3>
+
+                        <div class="param-item">
+                            <label>选择角色</label>
+                            <select id="gsv-model-select-main" class="param-select" style="display:none" onchange="onGSVModelChange()">
+                                <option value="">— 暂无可用模型 —</option>
+                            </select>
+                        </div>
+
+                        <textarea id="gsv-text" class="tts-input" placeholder="输入要转换为语音的文字..." rows="4" style="margin-top:12px"></textarea>
+
+                        <details style="margin-top:12px" id="gsv-advanced-details">
+                            <summary style="cursor:pointer;font-size:13px;font-weight:600;color:var(--ba-text-secondary);padding:8px 0;user-select:none">
+                                ⚙️ 高级设置
+                            </summary>
+                            <div style="padding:12px;background:var(--ba-bg);border-radius:var(--ba-radius-sm);margin-top:8px">
+                                <div class="param-item">
+                                    <label>语速 <span class="param-val" id="gsv-val-speed">1.0</span></label>
+                                    <input type="range" min="0.5" max="2.0" value="1.0" step="0.1" oninput="gsvSpeed=parseFloat(this.value);document.getElementById('gsv-val-speed').textContent=this.value">
+                                </div>
+                                <div class="param-item">
+                                    <label>温度 <span class="param-val" id="gsv-val-temp">1.0</span></label>
+                                    <input type="range" min="0.1" max="2.0" value="1.0" step="0.1" oninput="gsvTemp=parseFloat(this.value);document.getElementById('gsv-val-temp').textContent=this.value">
+                                </div>
+                                <div class="param-item">
+                                    <label>Top-K</label>
+                                    <input type="number" id="gsv-topk" value="5" min="1" max="30" style="width:80px;padding:6px 10px;border:1px solid var(--ba-border);border-radius:6px;font-size:13px;font-family:inherit">
+                                </div>
+                                <div style="font-size:11px;color:var(--ba-text-secondary);margin-top:8px;padding-top:8px;border-top:1px solid var(--ba-border)">
+                                </div>
+                            </details>
+
+                        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+                            <button id="btn-gsv-generate" class="btn-primary" onclick="generateGSVTTS()" disabled>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                GSV 生成语音
+                            </button>
+                            <button class="btn-secondary" onclick="sendToStudio()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                                发送到变声工作室
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="panel-section output-section">
+                        <h3 class="panel-title">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+                            输出结果
+                        </h3>
+                        <div id="gsv-convert-status" class="convert-status" style="display:none">
+                            <div class="status-spinner"></div>
+                            <span id="gsv-status-text">处理中...</span>
+                        </div>
+                        <div id="gsv-output-area" class="output-area" style="display:none">
+                            <div class="output-player">
+                                <audio id="gsv-output-audio" controls></audio>
+                            </div>
+                            <div id="gsv-output-info" class="output-info"></div>
+                        </div>
+                        <div id="gsv-no-output" style="padding:20px;text-align:center;color:var(--ba-text-secondary)">
+                            <p>输入文字并选择角色后点击「GSV 生成语音」</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </section>
+
+    </main>
+
+    <div class="bg-particles" id="bg-particles"></div>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
