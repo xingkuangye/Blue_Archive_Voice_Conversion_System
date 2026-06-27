@@ -37,7 +37,6 @@ document.addEventListener('DOMContentLoaded', function() {
     var page = window.location.hash.replace('#', '') || 'home';
     if (document.getElementById('page-' + page)) navigateTo(page); else navigateTo('home');
     loadCharacters();
-    loadTTSVoices();
     loadGSVModels();
 });
 
@@ -222,57 +221,7 @@ function clearGSVAudio() {
     checkConvertReady();
 }
 
-async function loadTTSVoices() {
-    try {
-        var resp = await fetch('/api/voices');
-        var data = await resp.json();
-        var select = document.getElementById('tts-voice');
-        select.innerHTML = '';
-        var groups = {};
-        for (var i = 0; i < data.voices.length; i++) {
-            var v = data.voices[i];
-            var loc = v.locale || 'other';
-            if (!groups[loc]) groups[loc] = [];
-            groups[loc].push(v);
-        }
-        var keys = Object.keys(groups);
-        for (var ki = 0; ki < keys.length; ki++) {
-            var g = document.createElement('optgroup');
-            g.label = keys[ki];
-            var voices = groups[keys[ki]];
-            for (var vi = 0; vi < voices.length; vi++) {
-                var opt = document.createElement('option');
-                opt.value = voices[vi].name;
-                opt.textContent = voices[vi].short_name + ' (' + voices[vi].gender + ')';
-                g.appendChild(opt);
-            }
-            select.appendChild(g);
-        }
-    } catch (e) { console.error('TTS failed', e); }
-}
 
-async function generateTTS() {
-    var text = document.getElementById('tts-text').value.trim();
-    if (!text) { showToast('请输入文本'); return; }
-    var voice = document.getElementById('tts-voice').value;
-    var btn = document.querySelector('#input-tts .btn-secondary');
-    btn.disabled = true;
-    btn.textContent = '生成中...';
-    try {
-        var fd = new FormData();
-        fd.append('text', text);
-        fd.append('voice', voice);
-        var resp = await fetch('/api/tts', { method: 'POST', body: fd });
-        var data = await resp.json();
-        state.audioPath = data.path;
-        showToast('语音生成成功');
-        checkConvertReady();
-    } catch (e) { showToast('语音生成失败'); }
-    finally {
-        btn.disabled = false;
-        btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> 生成语音';
-    }
-}
 
 function updateParam(name, value) {
     state.params[name] = value;

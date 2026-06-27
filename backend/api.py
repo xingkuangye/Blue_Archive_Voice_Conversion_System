@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 # ─── 全局 ───
 ml_available = False
 categories_meta = []
-tts_voices_cache = []
+
 
 
 # ════════════════════════════════════════════
@@ -362,17 +362,6 @@ def get_characters_metadata():
     return chars
 
 
-async def load_tts_voices_inner():
-    try:
-        import edge_tts
-        vl = await edge_tts.list_voices()
-        return [{"name": f"{v['ShortName']}-{v['Gender']}", "short_name": v["ShortName"], "gender": v["Gender"], "locale": v["Locale"]} for v in vl]
-    except:
-        return [{"name": "zh-CN-XiaoxiaoNeural-Female", "short_name": "zh-CN-XiaoxiaoNeural", "gender": "Female", "locale": "zh-CN"},
-                {"name": "zh-CN-YunxiNeural-Male", "short_name": "zh-CN-YunxiNeural", "gender": "Male", "locale": "zh-CN"},
-                {"name": "en-US-AnaNeural-Female", "short_name": "en-US-AnaNeural", "gender": "Female", "locale": "en-US"}]
-
-
 # ════════════════════════════════════════════
 # FastAPI
 # ════════════════════════════════════════════
@@ -400,12 +389,10 @@ def _compress_image(img_bytes: bytes, max_size: int = 300) -> bytes:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global categories_meta, tts_voices_cache
+    global categories_meta
     categories_meta = get_characters_metadata()
     logger.info(f"已加载 {sum(len(c['characters']) for c in categories_meta)} 个角色")
     check_ml_deps()
-    tts_voices_cache = await load_tts_voices_inner()
-    logger.info(f"已加载 {len(tts_voices_cache)} 个 TTS 语音")
     yield
 
 
@@ -445,9 +432,6 @@ async def list_models(search: str = ""):
         return {"categories": filtered}
     return {"categories": cats}
 
-@app.get("/api/voices")
-async def list_voices():
-    return {"voices": tts_voices_cache}
 
 @app.post("/api/upload")
 async def upload_audio(request: Request, file: UploadFile = File(...)):
@@ -457,16 +441,6 @@ async def upload_audio(request: Request, file: UploadFile = File(...)):
         f.write(await file.read())
     return {"path": dest, "filename": file.filename}
 
-
-@app.post("/api/tts")
-async def text_to_speech(text: str = Form(...), voice: str = Form(...)):
-    try:
-        import edge_tts
-        tf = "temp_tts_output.mp3"
-        await edge_tts.Communicate(text, "-".join(voice.split("-")[:-1])).save(tf)
-        return {"path": tf}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ─── 任务提交 ───
