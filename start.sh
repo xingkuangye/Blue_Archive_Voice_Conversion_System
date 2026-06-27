@@ -1,3 +1,4 @@
+#!/bin/bash
 # Blue Archive RVC — 启动脚本（Linux/macOS）
 # 自动检测 GPU 并安装对应 PyTorch
 set -e
@@ -13,6 +14,9 @@ for cmd in python3 python; do
 done
 if [ -z "$PYTHON" ]; then echo "❌ 请先安装 Python 3"; exit 1; fi
 echo "✓ $($PYTHON --version)"
+
+# 设置管理员密码（改为你自己的密码）
+export ADMIN_PASSWORD="admin123"
 
 # GPU 检测
 HAS_CUDA=false
