@@ -26,7 +26,10 @@ _config = None
 # ─── 全局 CPU 线程优化 ───
 _NUM_CORES = cpu_count()
 torch.set_num_threads(_NUM_CORES)
-torch.set_num_interop_threads(min(4, _NUM_CORES))
+try:
+    torch.set_num_interop_threads(min(4, _NUM_CORES))
+except RuntimeError:
+    pass  # 如果 PyTorch 并行已经初始化则跳过
 logger.info(f"系统核心: {_NUM_CORES}, 推理设备: {device if device else "cpu"}")
 
 
