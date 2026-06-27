@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Virtual env
+.venv/
+env/
+venv/
+
+# Temp files
+temp/
+*.wav
+*.mp3
+
+# Large model files
+*.pt
+*.pth
+*.onnx
+*.index
+hubert_base.pt
+rmvpe.pt
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Config with secrets
+weights/gsv_config.json
+weights/rvc_remote_config.json
