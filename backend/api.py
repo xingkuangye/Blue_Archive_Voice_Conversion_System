@@ -376,6 +376,10 @@ async def load_tts_voices_inner():
 # FastAPI
 # ════════════════════════════════════════════
 
+def _refresh_metadata():
+    global categories_meta
+    categories_meta = get_characters_metadata()
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global categories_meta, tts_voices_cache
@@ -407,7 +411,7 @@ async def health():
 
 @app.get("/api/models")
 async def list_models():
-    return {"categories": categories_meta}
+    return {"categories": get_characters_metadata()}
 
 @app.get("/api/voices")
 async def list_voices():
@@ -780,7 +784,9 @@ async def admin_create_category(request: Request, key: str = Form(...), title: s
         raise HTTPException(status_code=401, detail="Unauthorized")
     from backend.admin import create_category
     try:
-        return create_category(key, title, folder_path, description)
+        result = create_category(key, title, folder_path, description)
+        _refresh_metadata()
+        return result
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -791,7 +797,9 @@ async def admin_toggle_category(request: Request, key: str, enable: bool = Form(
         raise HTTPException(status_code=401, detail="Unauthorized")
     from backend.admin import toggle_category
     try:
-        return toggle_category(key, enable)
+        result = toggle_category(key, enable)
+        _refresh_metadata()
+        return result
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
@@ -802,7 +810,9 @@ async def admin_delete_category(request: Request, key: str):
         raise HTTPException(status_code=401, detail="Unauthorized")
     from backend.admin import delete_category
     try:
-        return delete_category(key)
+        result = delete_category(key)
+        _refresh_metadata()
+        return result
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
@@ -824,7 +834,9 @@ async def admin_toggle_model(request: Request, key: str, name: str, enable: bool
         raise HTTPException(status_code=401, detail="Unauthorized")
     from backend.admin import toggle_model
     try:
-        return toggle_model(key, name, enable)
+        result = toggle_model(key, name, enable)
+        _refresh_metadata()
+        return result
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
@@ -873,8 +885,10 @@ async def admin_add_model(request: Request,
         cover_path = str(dest.name)
 
     try:
-        return add_model(key, char_name, title, author,
+        result = add_model(key, char_name, title, author,
                           model_path or "model.pth", index_path or "", cover_path or "")
+        _refresh_metadata()
+        return result
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -885,7 +899,9 @@ async def admin_delete_model(request: Request, key: str, name: str):
         raise HTTPException(status_code=401, detail="Unauthorized")
     from backend.admin import delete_model
     try:
-        return delete_model(key, name)
+        result = delete_model(key, name)
+        _refresh_metadata()
+        return result
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
