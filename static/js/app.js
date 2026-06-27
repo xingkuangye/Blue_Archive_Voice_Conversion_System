@@ -567,32 +567,34 @@ function renderGSVGrid() {
     var groups = {};
     for (var i = 0; i < _gsvModels.length; i++) {
         var m = _gsvModels[i];
-        var sec = m.section || '未分类';
+        var sec = m.section || '';
+        if (!sec) sec = '';
         if (!groups[sec]) groups[sec] = [];
         groups[sec].push(m);
     }
-    var sectionOrder = Object.keys(groups).sort(function(a, b) {
-        if (a === '未分类') return 1;
-        if (b === '未分类') return -1;
+    var keys = Object.keys(groups);
+    // Sort: empty section at end
+    keys.sort(function(a, b) {
+        if (!a && b) return 1;
+        if (a && !b) return -1;
         return a.localeCompare(b);
     });
 
-    for (var si = 0; si < sectionOrder.length; si++) {
-        var sec = sectionOrder[si];
+    for (var si = 0; si < keys.length; si++) {
+        var sec = keys[si];
         var models = groups[sec];
 
         var section = document.createElement('div');
         section.className = 'category-section';
-        // margin-bottom handled by CSS
 
-        var header = document.createElement('div');
-        header.className = 'category-header';
-        // margin handled by CSS
-        var h3 = document.createElement('h3');
-        // title style handled by CSS
-        h3.textContent = sec;
-        header.appendChild(h3);
-        section.appendChild(header);
+        if (sec) {
+            var header = document.createElement('div');
+            header.className = 'category-header';
+            var h3 = document.createElement('h3');
+            h3.textContent = sec;
+            header.appendChild(h3);
+            section.appendChild(header);
+        }
 
         var gridWrap = document.createElement('div');
         gridWrap.className = 'character-grid';
@@ -624,7 +626,6 @@ function renderGSVGrid() {
                 img.style.display = 'none';
             }
             img.onerror = function() {
-                // Replace with placeholder on image load failure
                 this.style.display = 'none';
                 if (!this.parentNode.querySelector('.char-card-img-placeholder')) {
                     var ph = document.createElement('div');

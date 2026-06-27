@@ -584,6 +584,16 @@ main {
     }
 }
 
+#gsv-character-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+#gsv-character-grid .category-section {
+    width: 100%;
+}
+
 #gsv-character-grid .category-header h3 {
     font-size: 16px;
     font-weight: 700;
