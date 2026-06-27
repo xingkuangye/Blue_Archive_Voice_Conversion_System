@@ -35,6 +35,9 @@ fi
 # 其他依赖
 pip install -r requirements.txt 2>/dev/null || pip install fastapi uvicorn python-multipart librosa soundfile numpy httpx edge-tts
 
+# 打补丁（修复 fairseq Python 3.12 兼容性）
+$PYTHON patch_fairseq.py
+
 # 检查模型
 for f in hubert_base.pt rmvpe.pt; do [ ! -f "$f" ] && echo "⚠️ 缺少: $f"; done
 [ ! -f "weights/folder_info.json" ] && echo "⚠️ 缺少 weights/"

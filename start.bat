@@ -45,6 +45,9 @@ if %ERRORLEVEL% NEQ 0 (
 echo 安装依赖...
 pip install -r requirements.txt 2>nul || pip install fastapi uvicorn python-multipart librosa soundfile numpy httpx edge-tts
 
+:: ─── 修复 fairseq 兼容性 ───
+python patch_fairseq.py
+
 :: ─── 检查模型文件 ───
 echo.
 echo 检查模型文件...
