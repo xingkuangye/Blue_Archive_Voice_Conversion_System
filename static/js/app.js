@@ -61,17 +61,44 @@ async function loadCharacters() {
 function renderCharacterGrid() {
     var grid = document.getElementById('character-grid');
     grid.innerHTML = '';
-    for (var i = 0; i < state.characters.length; i++) {
-        var ch = state.characters[i];
-        var card = document.createElement('div');
-        card.className = 'character-card';
-        card.onclick = function(n) { return function() { selectCharacter(n); navigateTo('studio'); }; }(ch.name);
-        var imgHtml = ch.cover
-            ? '<img class="char-card-img" src="/' + ch.cover + '" alt="' + ch.name + '" loading="lazy" />'
-            : '<div class="char-card-img-placeholder">' + ch.name.charAt(0) + '</div>';
-        var authorHtml = ch.author ? '<p class="char-meta">' + ch.author + '</p>' : '';
-        card.innerHTML = imgHtml + '<div class="char-card-body"><h4>' + ch.name + '</h4>' + authorHtml + '<span class="char-version">RVC ' + ch.version + '</span></div>';
-        grid.appendChild(card);
+    // Group by category
+    for (var ci = 0; ci < state.categories.length; ci++) {
+        var cat = state.categories[ci];
+        var chars = cat.characters || [];
+        if (chars.length === 0) continue;
+        var section = document.createElement('div');
+        section.className = 'category-section';
+        section.style.cssText = 'margin-bottom:28px';
+        var header = document.createElement('div');
+        header.className = 'category-header';
+        header.style.cssText = 'margin-bottom:12px';
+        var h3 = document.createElement('h3');
+        h3.style.cssText = 'font-size:18px;font-weight:600;color:#222;margin:0';
+        h3.textContent = cat.title;
+        header.appendChild(h3);
+        if (cat.description) {
+            var p = document.createElement('p');
+            p.style.cssText = 'margin:2px 0 0;font-size:13px;color:#888';
+            p.textContent = cat.description;
+            header.appendChild(p);
+        }
+        section.appendChild(header);
+        var gridWrap = document.createElement('div');
+        gridWrap.className = 'character-grid';
+        for (var i = 0; i < chars.length; i++) {
+            var ch = chars[i];
+            var card = document.createElement('div');
+            card.className = 'character-card';
+            card.onclick = (function(n) { return function() { selectCharacter(n); navigateTo('studio'); }; })(ch.name);
+            var imgHtml = ch.cover
+                ? '<img class="char-card-img" src="/' + ch.cover + '" alt="' + ch.name + '" loading="lazy" />'
+                : '<div class="char-card-img-placeholder">' + ch.name.charAt(0) + '</div>';
+            var authorHtml = ch.author ? '<p class="char-meta">' + ch.author + '</p>' : '';
+            card.innerHTML = imgHtml + '<div class="char-card-body"><h4>' + ch.name + '</h4>' + authorHtml + '<span class="char-version">RVC ' + ch.version + '</span></div>';
+            gridWrap.appendChild(card);
+        }
+        section.appendChild(gridWrap);
+        grid.appendChild(section);
     }
 }
 
