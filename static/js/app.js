@@ -91,7 +91,7 @@ function renderCharacterGrid() {
             card.className = 'character-card';
             card.onclick = (function(n) { return function() { selectCharacter(n); navigateTo('studio'); }; })(ch.name);
             var imgHtml = ch.cover
-                ? '<img class="char-card-img" src="/' + ch.cover + '" alt="' + ch.name + '" loading="lazy" />'
+                ? '<img class="char-card-img" src="/' + ch.cover + '" alt="' + ch.name + '" loading="lazy" onerror="this.style.display='none';this.parentNode.insertBefore(document.createElement('div'),this).className='char-card-img-placeholder';this.previousSibling.textContent='' + ch.name.charAt(0) + ''" />'
                 : '<div class="char-card-img-placeholder">' + ch.name.charAt(0) + '</div>';
             var authorHtml = ch.author ? '<p class="char-meta">' + ch.author + '</p>' : '';
             card.innerHTML = imgHtml + '<div class="char-card-body"><h4>' + ch.name + '</h4>' + authorHtml + '<span class="char-version">RVC ' + ch.version + '</span></div>';
@@ -469,13 +469,19 @@ function onGSVSearchChange() {
         var q = document.getElementById('gsv-search-input').value.trim().toLowerCase();
         var grid = document.getElementById('gsv-character-grid');
         if (!grid) return;
-        var cards = grid.querySelectorAll('.character-card');
-        for (var i = 0; i < cards.length; i++) {
-            var name = cards[i].querySelector('h4');
-            if (name) {
-                var match = name.textContent.toLowerCase().indexOf(q) > -1;
-                cards[i].style.display = match || !q ? '' : 'none';
+        var sections = grid.querySelectorAll('.category-section');
+        for (var si = 0; si < sections.length; si++) {
+            var cards = sections[si].querySelectorAll('.character-card');
+            var visible = 0;
+            for (var ci = 0; ci < cards.length; ci++) {
+                var name = cards[ci].querySelector('h4');
+                if (name) {
+                    var match = name.textContent.toLowerCase().indexOf(q) > -1;
+                    cards[ci].style.display = match || !q ? '' : 'none';
+                    if (match || !q) visible++;
+                }
             }
+            sections[si].style.display = visible > 0 ? '' : 'none';
         }
     }, 200);
 }
@@ -579,7 +585,14 @@ function renderGSVGrid() {
                 img.style.display = 'none';
             }
             img.onerror = function() {
+                // Replace with placeholder on image load failure
                 this.style.display = 'none';
+                if (!this.parentNode.querySelector('.char-card-img-placeholder')) {
+                    var ph = document.createElement('div');
+                    ph.className = 'char-card-img-placeholder';
+                    ph.textContent = this.alt.charAt(0);
+                    this.parentNode.insertBefore(ph, this);
+                }
             };
 
             var body = document.createElement('div');
