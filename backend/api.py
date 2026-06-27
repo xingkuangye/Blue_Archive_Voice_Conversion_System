@@ -530,7 +530,15 @@ async def download(request: Request, filename: str):
     fp = f"temp/{filename}"
     if not os.path.isfile(fp):
         raise HTTPException(status_code=404, detail="文件未找到")
-    return FileResponse(fp, media_type="audio/wav", filename=filename)
+    ext = os.path.splitext(filename)[1].lower()
+    mime_map = {
+        ".wav": "audio/wav", ".mp3": "audio/mpeg", ".m4a": "audio/mp4",
+        ".flac": "audio/flac", ".ogg": "audio/ogg",
+        ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+        ".webp": "image/webp", ".gif": "image/gif",
+    }
+    media_type = mime_map.get(ext, "application/octet-stream")
+    return FileResponse(fp, media_type=media_type, filename=filename)
 
 
 
