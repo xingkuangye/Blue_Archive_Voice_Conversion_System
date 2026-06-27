@@ -509,6 +509,26 @@ main {
     font-size: 28px;
 }
 
+/* 桌面端卡片稍大 */
+@media (min-width: 1024px) {
+    .category-section .character-card {
+        flex: 0 0 150px;
+    }
+
+    .category-section .char-card-body h4 {
+        font-size: 13px;
+    }
+
+    .category-section .char-card-img {
+        aspect-ratio: 3/4;
+    }
+
+    .category-section .char-card-img-placeholder {
+        aspect-ratio: 3/4;
+        font-size: 32px;
+    }
+}
+
 #gsv-character-grid .category-header h3 {
     font-size: 16px;
     font-weight: 700;
