@@ -348,7 +348,7 @@ def task_uvr5_dereverb(params: dict, cb) -> dict:
 
 def check_ml_deps():
     global ml_available
-    for mod in ["torch", "librosa", "numpy", "fairseq", "pyworld", "parselmouth"]:
+    for mod in ["torch", "librosa", "numpy"]:
         try:
             __import__(mod)
         except ImportError:
@@ -674,6 +674,7 @@ async def admin_gsv_add_model(
     text_lang: str = Form("zh"),
     cover: str = Form(""),
     enable: bool = Form(True),
+    section: str = Form(""),
     cover_file: UploadFile = File(None),
 ):
     if not _check_admin(request):
@@ -700,7 +701,7 @@ async def admin_gsv_add_model(
         "name": name, "gpt_path": gpt_path, "sovits_path": sovits_path,
         "ref_audio_path": ref_audio_path, "prompt_text": prompt_text,
         "prompt_lang": prompt_lang, "text_lang": text_lang,
-        "cover": cover_path, "enable": enable,
+        "section": section, "cover": cover_path, "enable": enable,
     })
     save_config(cfg)
     return {"ok": True}
