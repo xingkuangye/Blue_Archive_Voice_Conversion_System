@@ -681,6 +681,18 @@ async function generateGSVTTS() {
     }
 }
 
+function downloadGSV() {
+    if (!window._gsvLastBlob) { showToast('请先生成语音'); return; }
+    var url = URL.createObjectURL(new Blob([window._gsvLastBlob], { type: 'audio/wav' }));
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'gsv_output.wav';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
 async function sendToStudio() {
     if (!window._gsvLastBlob) { showToast('请先生成语音'); return; }
     var fd = new FormData();
