@@ -409,6 +409,52 @@ main {
     transform: scale(0.97);
 }
 
+/* ─── 分类板块 ─── */
+.category-section {
+    background: var(--ba-bg-card);
+    border-radius: var(--ba-radius);
+    box-shadow: var(--ba-shadow);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    transition: var(--transition);
+}
+
+.category-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--ba-blue-pale);
+}
+
+.category-header h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ba-text);
+    margin: 0;
+}
+
+.category-header .cat-count {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ba-text-secondary);
+    background: var(--ba-bg);
+    padding: 2px 10px;
+    border-radius: 20px;
+}
+
+.category-header .cat-desc {
+    font-size: 13px;
+    color: var(--ba-text-secondary);
+    margin: 0;
+    margin-top: 2px;
+}
+
+.category-section .character-grid {
+    padding-bottom: 0;
+}
+
 .char-card-img {
     width: 100%;
     aspect-ratio: 3/4;

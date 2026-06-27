@@ -67,21 +67,22 @@ function renderCharacterGrid() {
         if (chars.length === 0) continue;
         var section = document.createElement('div');
         section.className = 'category-section';
-        section.style.cssText = 'margin-bottom:28px';
         var header = document.createElement('div');
         header.className = 'category-header';
-        header.style.cssText = 'margin-bottom:12px';
         var h3 = document.createElement('h3');
-        h3.style.cssText = 'font-size:18px;font-weight:600;color:#222;margin:0';
         h3.textContent = cat.title;
         header.appendChild(h3);
-        if (cat.description) {
-            var p = document.createElement('p');
-            p.style.cssText = 'margin:2px 0 0;font-size:13px;color:#888';
-            p.textContent = cat.description;
-            header.appendChild(p);
-        }
+        var count = document.createElement('span');
+        count.className = 'cat-count';
+        count.textContent = chars.length + '个角色';
+        header.appendChild(count);
         section.appendChild(header);
+        if (cat.description) {
+            var desc = document.createElement('p');
+            desc.className = 'cat-desc';
+            desc.textContent = cat.description;
+            section.appendChild(desc);
+        }
         var gridWrap = document.createElement('div');
         gridWrap.className = 'character-grid';
         for (var i = 0; i < chars.length; i++) {
