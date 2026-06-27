@@ -30,7 +30,7 @@ try:
     torch.set_num_interop_threads(min(4, _NUM_CORES))
 except RuntimeError:
     pass  # 如果 PyTorch 并行已经初始化则跳过
-logger.info(f"系统核心: {_NUM_CORES}, 推理设备: {device if device else "cpu"}")
+logger.info(f"系统核心: {_NUM_CORES}, 推理设备: {device}")
 
 
 def _clean_yaml(raw: str) -> str:
