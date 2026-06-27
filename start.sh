@@ -38,8 +38,13 @@ pip install -r requirements.txt 2>/dev/null || pip install fastapi uvicorn pytho
 # 打补丁（修复 fairseq Python 3.12 兼容性）
 $PYTHON patch_fairseq.py
 
-# 检查模型
-for f in hubert_base.pt rmvpe.pt; do [ ! -f "$f" ] && echo "⚠️ 缺少: $f"; done
+# 检查/下载模型
+for f in hubert_base.pt rmvpe.pt; do
+    if [ ! -f "$f" ]; then
+        echo "⬇️ 下载 $f..."
+        curl -L -o "$f" "https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/main/$f"
+    fi
+done
 [ ! -f "weights/folder_info.json" ] && echo "⚠️ 缺少 weights/"
 
 echo ""

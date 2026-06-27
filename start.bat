@@ -48,12 +48,17 @@ pip install -r requirements.txt 2>nul || pip install fastapi uvicorn python-mult
 :: ─── 修复 fairseq 兼容性 ───
 python patch_fairseq.py
 
-:: ─── 检查模型文件 ───
+:: ─── 下载模型文件 ───
 echo.
-echo 检查模型文件...
-if not exist "hubert_base.pt" echo [33m⚠️  缺少: hubert_base.pt[0m
-if not exist "rmvpe.pt" echo [33m⚠️  缺少: rmvpe.pt[0m
-if not exist "weights\folder_info.json" echo [33m⚠️  缺少 weights/ 目录[0m
+echo 检查/下载模型文件...
+if not exist "hubert_base.pt" (
+    echo 下载 hubert_base.pt...
+    curl -L -o "hubert_base.pt" "https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/main/hubert_base.pt"
+)
+if not exist "rmvpe.pt" (
+    echo 下载 rmvpe.pt...
+    curl -L -o "rmvpe.pt" "https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/main/rmvpe.pt"
+)
 
 :: ─── 启动 ───
 echo.
