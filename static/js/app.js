@@ -90,11 +90,50 @@ function renderCharacterGrid() {
             var card = document.createElement('div');
             card.className = 'character-card';
             card.onclick = (function(n) { return function() { selectCharacter(n); navigateTo('studio'); }; })(ch.name);
-            var imgHtml = ch.cover
-                ? '<img class="char-card-img" src="/' + ch.cover + '" alt="' + ch.name + '" loading="lazy" onerror="this.style.display='none';this.parentNode.insertBefore(document.createElement('div'),this).className='char-card-img-placeholder';this.previousSibling.textContent='' + ch.name.charAt(0) + ''" />'
-                : '<div class="char-card-img-placeholder">' + ch.name.charAt(0) + '</div>';
-            var authorHtml = ch.author ? '<p class="char-meta">' + ch.author + '</p>' : '';
-            card.innerHTML = imgHtml + '<div class="char-card-body"><h4>' + ch.name + '</h4>' + authorHtml + '<span class="char-version">RVC ' + ch.version + '</span></div>';
+
+            // Image or placeholder
+            if (ch.cover) {
+                var img = document.createElement('img');
+                img.className = 'char-card-img';
+                img.src = '/' + ch.cover;
+                img.alt = ch.name;
+                img.loading = 'lazy';
+                img.onerror = function() {
+                    this.style.display = 'none';
+                    if (!this.parentNode.querySelector('.char-card-img-placeholder')) {
+                        var ph = document.createElement('div');
+                        ph.className = 'char-card-img-placeholder';
+                        ph.textContent = this.alt.charAt(0);
+                        this.parentNode.insertBefore(ph, this);
+                    }
+                };
+                card.appendChild(img);
+            } else {
+                var ph = document.createElement('div');
+                ph.className = 'char-card-img-placeholder';
+                ph.textContent = ch.name.charAt(0);
+                card.appendChild(ph);
+            }
+
+            var body = document.createElement('div');
+            body.className = 'char-card-body';
+            var nameEl = document.createElement('h4');
+            nameEl.textContent = ch.name;
+            body.appendChild(nameEl);
+
+            if (ch.author) {
+                var meta = document.createElement('p');
+                meta.className = 'char-meta';
+                meta.textContent = ch.author;
+                body.appendChild(meta);
+            }
+
+            var ver = document.createElement('span');
+            ver.className = 'char-version';
+            ver.textContent = 'RVC ' + ch.version;
+            body.appendChild(ver);
+
+            card.appendChild(body);
             gridWrap.appendChild(card);
         }
         section.appendChild(gridWrap);
