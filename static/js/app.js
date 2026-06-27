@@ -300,6 +300,11 @@ async function pollTask(queueId, opts) {
             if (progressWrap) progressWrap.style.display = 'none';
             throw new Error(qData.error || '处理失败');
         }
+        if (qData.status === 'unknown') {
+            statusEl.style.display = 'none';
+            if (progressWrap) progressWrap.style.display = 'none';
+            throw new Error('服务器已重启，请重新提交');
+        }
         if (qData.status === 'processing') {
             if (progressWrap) progressWrap.style.display = 'block';
             var pct = qData.progress || 0;

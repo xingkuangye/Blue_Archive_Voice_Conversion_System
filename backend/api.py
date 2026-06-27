@@ -83,37 +83,46 @@ class TaskQueue:
 
     def _worker(self):
         while True:
-            with self._lock:
-                if not self._queue:
-                    self._processing = False
-                    return
-                qid, ttype, params, fn = self._queue.pop(0)
-                self._refresh_positions()
-                self._status[qid] = {"status": "processing", "progress": 0, "message": "初始化..."}
-
-            start = time.time()
             try:
-                dur = params.get("_duration_sec", 5)
-                logger.info(f"[队列] 开始 {qid} [{ttype}], 时长={dur:.1f}s")
-
-                # 包装进度回调
-                def cb(pct, msg=""):
-                    self.set_progress(qid, pct, msg)
-
-                result = fn(params, cb)
-                elapsed = time.time() - start
-                speed = elapsed / max(dur, 0.01)
-                self._avg_speed = self._avg_speed * 0.7 + speed * 0.3
-                logger.info(f"[队列] 完成 {qid}: {elapsed:.1f}s (speed={speed:.2f}x)")
-
-                result["status"] = "done"
-                result["progress"] = 100
                 with self._lock:
-                    self._status[qid] = result
+                    if not self._queue:
+                        self._processing = False
+                        return
+                    qid, ttype, params, fn = self._queue.pop(0)
+                    self._refresh_positions()
+                    self._status[qid] = {"status": "processing", "progress": 0, "message": "初始化..."}
+
+                start = time.time()
+                try:
+                    dur = params.get("_duration_sec", 5)
+                    logger.info(f"[队列] 开始 {qid} [{ttype}], 时长={dur:.1f}s")
+
+                    def cb(pct, msg=""):
+                        self.set_progress(qid, pct, msg)
+
+                    result = fn(params, cb)
+                    elapsed = time.time() - start
+                    speed = elapsed / max(dur, 0.01)
+                    self._avg_speed = self._avg_speed * 0.7 + speed * 0.3
+                    logger.info(f"[队列] 完成 {qid}: {elapsed:.1f}s (speed={speed:.2f}x)")
+
+                    result["status"] = "done"
+                    result["progress"] = 100
+                    with self._lock:
+                        self._status[qid] = result
+                except Exception as e:
+                    logger.error(f"[队列] 失败 {qid}: {e}\n{traceback.format_exc()}")
+                    with self._lock:
+                        self._status[qid] = {"status": "error", "error": str(e)}
             except Exception as e:
-                logger.error(f"[队列] 失败 {qid}: {e}\n{traceback.format_exc()}")
+                logger.error(f"[队列] Worker 崩溃: {e}\n{traceback.format_exc()}")
+                # 重启 worker
                 with self._lock:
-                    self._status[qid] = {"status": "error", "error": str(e)}
+                    self._processing = False
+                import threading
+                self._thread = threading.Thread(target=self._worker, daemon=True)
+                self._thread.start()
+                return
 
 
 queue = TaskQueue()
@@ -261,6 +270,7 @@ def task_uvr5_separate(params: dict, cb) -> dict:
     except Exception as e:
         logger.warning(f"远程 UVR5 不可用，回退到本地: {e}")
 
+    os.makedirs("temp", exist_ok=True)
     from uvr5 import separate_audio_vocals
 
     cb(5, "加载分离模型...")
@@ -314,6 +324,7 @@ def task_uvr5_dereverb(params: dict, cb) -> dict:
     except Exception as e:
         logger.warning(f"远程 UVR5 去混响不可用，回退到本地: {e}")
 
+    os.makedirs("temp", exist_ok=True)
     from uvr5 import separate_dereverb
 
     cb(5, "加载去混响模型...")

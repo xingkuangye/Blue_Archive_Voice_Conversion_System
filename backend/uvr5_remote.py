@@ -14,7 +14,7 @@ CONFIG_PATH = Path(__file__).parent.parent / "weights" / "uvr5_remote_config.jso
 DEFAULT_CONFIG = {
     "api_url": "",
     "enabled": False,
-    "timeout": 120,
+    "timeout": 30,
 }
 
 
@@ -62,7 +62,8 @@ async def _download_file(client: httpx.AsyncClient, api_url: str, file_path: str
     """从远程服务器下载结果文件"""
     if not file_path:
         return b""
-    filename = os.path.basename(file_path)
+    # 兼容 Windows 和 Linux 路径
+    filename = file_path.replace("\\", "/").split("/")[-1]
     resp = await client.get(f"{api_url.rstrip('/')}/api/download/{filename}")
     if resp.status_code == 200:
         return resp.content
@@ -79,13 +80,14 @@ async def separate_remote(audio_data: bytes, model_name: str = "mel_band_roforme
     api_url = cfg["api_url"]
     timeout = cfg.get("timeout", 120)
 
-    async with httpx.AsyncClient(timeout=timeout) as client:
+    async with httpx.AsyncClient(timeout=min(30, timeout)) as client:
         # 上传音频文件
         files = {"audio": ("input.wav", audio_data, "audio/wav")}
         resp = await client.post(
             f"{api_url.rstrip('/')}/api/uvr5/separate",
             data={"model_name": model_name},
             files=files,
+            timeout=min(30, timeout),
         )
         if resp.status_code != 200:
             detail = resp.text
@@ -117,11 +119,12 @@ async def dereverb_remote(audio_data: bytes, overlap: int = 4) -> dict:
     api_url = cfg["api_url"]
     timeout = cfg.get("timeout", 120)
 
-    async with httpx.AsyncClient(timeout=timeout) as client:
+    async with httpx.AsyncClient(timeout=max(30, timeout)) as client:
         files = {"audio": ("input.wav", audio_data, "audio/wav")}
         resp = await client.post(
             f"{api_url.rstrip('/')}/api/uvr5/dereverb",
             data={"overlap": overlap},
+            timeout=max(30, timeout),
             files=files,
         )
         if resp.status_code != 200:
