@@ -424,7 +424,10 @@ app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 weights_dir = Path(__file__).parent.parent / "weights"
 if weights_dir.exists():
     app.mount("/weights", StaticFiles(directory=str(weights_dir)), name="weights")
-os.makedirs("temp", exist_ok=True)
+temp_dir = Path(__file__).parent.parent / "temp"
+os.makedirs(str(temp_dir), exist_ok=True)
+if temp_dir.exists():
+    app.mount("/temp", StaticFiles(directory=str(temp_dir)), name="temp")
 
 
 @app.get("/")

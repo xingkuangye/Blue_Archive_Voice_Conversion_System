@@ -790,7 +790,7 @@ function showEditGSVModal(m) {
         var coverSrc = m.cover;
         if (coverSrc.indexOf('gsv_covers') > -1) {
             var parts = coverSrc.split('/');
-            coverSrc = '/api/download/gsv_covers/' + parts[parts.length - 1];
+            coverSrc = '/temp/gsv_covers/' + parts[parts.length - 1];
         }
         document.getElementById('gsv-cover-img').src = coverSrc;
         document.getElementById('gsv-cover-preview').style.display = 'block';

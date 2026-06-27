@@ -610,7 +610,7 @@ function renderGSVGrid() {
                 var cv = ch.cover;
                 if (cv.indexOf('gsv_covers') > -1 || cv.indexOf('temp/gsv_covers') > -1) {
                     var parts = cv.split('/');
-                    coverUrl = '/api/download/gsv_covers/' + parts[parts.length - 1];
+                    coverUrl = '/temp/gsv_covers/' + parts[parts.length - 1];
                 } else {
                     coverUrl = cv;
                 }
@@ -670,7 +670,7 @@ function selectGSVCharacter(name) {
             var cv = _gsvModels[i].cover;
             if (cv.indexOf('gsv_covers') > -1 || cv.indexOf('temp/gsv_covers') > -1) {
                 var parts = cv.split('/');
-                coverUrl = '/api/download/gsv_covers/' + parts[parts.length - 1];
+                coverUrl = '/temp/gsv_covers/' + parts[parts.length - 1];
             } else {
                 coverUrl = cv;
             }
