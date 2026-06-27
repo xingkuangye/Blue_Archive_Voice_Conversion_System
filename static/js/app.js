@@ -560,6 +560,7 @@ function renderGSVGrid() {
         section.appendChild(gridWrap);
         grid.appendChild(section);
     }
+}
 
 function selectGSVCharacter(name) {
     _gsvCurrentChar = name;
