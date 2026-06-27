@@ -513,45 +513,45 @@ main {
 }
 
 .category-section .character-card {
-    flex: 0 0 180px;
+    flex: 0 0 150px;
     border-radius: 12px;
     scroll-snap-align: start;
 }
 
 .category-section .char-card-body {
-    padding: 8px 10px;
+    padding: 10px 12px;
 }
 
 .category-section .char-card-body h4 {
-    font-size: 12px;
+    font-size: 13px;
 }
 
 .category-section .char-card-img {
-    aspect-ratio: 3/4;
+    aspect-ratio: 1;
 }
 
 .category-section .char-card-img-placeholder {
-    aspect-ratio: 3/4;
-    font-size: 32px;
+    aspect-ratio: 1;
+    font-size: 36px;
 }
 
 /* 桌面端卡片稍大 */
 @media (min-width: 1024px) {
     .category-section .character-card {
-        flex: 0 0 200px;
+        flex: 0 0 170px;
     }
 
     .category-section .char-card-body h4 {
-        font-size: 13px;
+        font-size: 14px;
     }
 
     .category-section .char-card-img {
-        aspect-ratio: 3/4;
+        aspect-ratio: 1;
     }
 
     .category-section .char-card-img-placeholder {
-        aspect-ratio: 3/4;
-        font-size: 32px;
+        aspect-ratio: 1;
+        font-size: 40px;
     }
 }
 
@@ -1315,7 +1315,7 @@ main {
     }
 
     .category-section .character-card {
-        flex: 0 0 150px;
+        flex: 0 0 130px;
     }
 }
 
