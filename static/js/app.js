@@ -538,13 +538,13 @@ function renderGSVGrid() {
 
         var section = document.createElement('div');
         section.className = 'category-section';
-        section.style.cssText = 'margin-bottom:28px';
+        // margin-bottom handled by CSS
 
         var header = document.createElement('div');
         header.className = 'category-header';
-        header.style.cssText = 'margin-bottom:12px';
+        // margin handled by CSS
         var h3 = document.createElement('h3');
-        h3.style.cssText = 'font-size:16px;font-weight:600;color:#222;margin:0';
+        // title style handled by CSS
         h3.textContent = sec;
         header.appendChild(h3);
         section.appendChild(header);
