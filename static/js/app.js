@@ -689,12 +689,6 @@ function selectGSVCharacter(name) {
     if (btn) btn.disabled = !_gsvOnline;
 }
 
-function deselectGSV() {
-    _gsvCurrentChar = null;
-    document.getElementById('gsv-studio-panel').style.display = 'none';
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
 async function generateGSVTTS() {
     var text = document.getElementById('gsv-text').value.trim();
     if (!text) { showToast('请输入文本'); return; }
