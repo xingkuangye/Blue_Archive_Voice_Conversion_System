@@ -11,6 +11,7 @@ const state = {
     currentChar: null,
     inputMode: 'upload',
     audioPath: null,
+    gsvAudioPath: null,
     params: {
         f0: 0, index: 0.7, filter: 3, rms: 1.0,
         protect: 0.5, resample: 0, f0method: 'rmvpe',
@@ -151,12 +152,19 @@ function setInputMode(mode) {
     document.querySelector('.input-tab[data-mode="' + mode + '"]').classList.add('active');
     document.querySelectorAll('.input-panel').forEach(function(p) { p.classList.remove('active'); });
     document.getElementById('input-' + mode).classList.add('active');
+    // If switching to gsv mode but no gsv audio, switch back to upload
+    if (mode === 'gsv' && !state.gsvAudioPath) {
+        document.getElementById('gsv-input-tab').style.display = 'none';
+        setInputMode('upload');
+        return;
+    }
     checkConvertReady();
 }
 
 function onFileSelected(e) {
     var file = e.target.files[0];
     if (!file) return;
+    state.gsvAudioPath = null;
     document.getElementById('file-name').textContent = '📁 ' + file.name + ' (' + (file.size / 1024 / 1024).toFixed(1) + ' MB)';
     document.getElementById('file-info').style.display = 'flex';
     uploadFile(file);
@@ -175,6 +183,15 @@ function clearFile() {
     document.getElementById('file-input').value = '';
     document.getElementById('file-info').style.display = 'none';
     state.audioPath = null;
+    state.gsvAudioPath = null;
+    checkConvertReady();
+}
+
+function clearGSVAudio() {
+    state.gsvAudioPath = null;
+    state.audioPath = null;
+    document.getElementById('gsv-input-tab').style.display = 'none';
+    if (state.inputMode === 'gsv') setInputMode('upload');
     checkConvertReady();
 }
 
@@ -701,9 +718,16 @@ async function sendToStudio() {
     try {
         var r = await fetch('/api/upload', { method: 'POST', body: fd });
         var d = await r.json();
+        state.gsvAudioPath = d.path;
         state.audioPath = d.path;
         checkConvertReady();
-        showToast('已发送到变声工作室');
+        showToast('已发送到变声工作室（GSV 音频）');
         navigateTo('studio');
+        // After navigation, show and select GSV tab
+        setTimeout(function() {
+            var gsvTab = document.getElementById('gsv-input-tab');
+            if (gsvTab) gsvTab.style.display = '';
+            setInputMode('gsv');
+        }, 100);
     } catch (e) { showToast('发送失败: ' + e.message); }
 }

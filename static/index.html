@@ -74,6 +74,7 @@
                         <div class="input-tabs">
                             <button class="input-tab active" data-mode="upload" onclick="setInputMode('upload')">上传文件</button>
                             <button class="input-tab" data-mode="tts" onclick="setInputMode('tts')">Edge-TTS</button>
+                            <button class="input-tab" data-mode="gsv" onclick="setInputMode('gsv')" id="gsv-input-tab" style="display:none">GSV 音频</button>
                         </div>
                         <div id="input-upload" class="input-panel active">
                             <div class="upload-zone" onclick="document.getElementById('file-input').click()">
@@ -88,6 +89,13 @@
                             <textarea id="tts-text" class="tts-input" placeholder="输入要转换为语音的文字..." rows="3"></textarea>
                             <div class="tts-voice-select"><label>选择基底语音</label><select id="tts-voice"></select></div>
                             <button class="btn-secondary" onclick="generateTTS()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> 生成语音</button>
+                        </div>
+                        <div id="input-gsv" class="input-panel">
+                            <div class="file-info" style="margin-top:0">
+                                <span>🎤 GSV 合成音频已就绪</span>
+                                <button class="btn-sm" onclick="clearGSVAudio()">移除</button>
+                            </div>
+                            <p style="font-size:13px;color:var(--ba-text-secondary);margin-top:8px">该音频来自 GSV TTS 页面，可以直接转换</p>
                         </div>
                     </div>
                     <div class="panel-section">
@@ -245,10 +253,6 @@
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                                 GSV 生成语音
                             </button>
-                            <button class="btn-secondary" onclick="sendToStudio()">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                                发送到变声工作室
-                            </button>
                         </div>
                     </div>
 
@@ -266,6 +270,12 @@
                                 <audio id="gsv-output-audio" controls></audio>
                             </div>
                             <div id="gsv-output-info" class="output-info"></div>
+                            <div style="display:flex;gap:8px;margin-top:12px">
+                                <button class="btn-secondary" onclick="sendToStudio()" style="flex:1;justify-content:center">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                                    发送到变声工作室
+                                </button>
+                            </div>
                         </div>
                         <div id="gsv-no-output" style="padding:20px;text-align:center;color:var(--ba-text-secondary)">
                             <p>输入文字并选择角色后点击「GSV 生成语音」</p>
