@@ -17,6 +17,22 @@ logger = logging.getLogger(__name__)
 # ─── 全局缓存 ───
 _model = None
 _config = None
+
+
+def unload_model():
+    """释放 GPU 显存"""
+    global _model, _config
+    if _model is not None:
+        import gc, torch
+        _model = _model.cpu()
+        del _model
+        del _config
+        _model = None
+        _config = None
+        gc.collect()
+        torch.cuda.empty_cache()
+        import logging
+        logging.getLogger(__name__).info("MDX23C DeReverb: 模型已卸载，显存已释放")
 _MODEL_DIR = os.path.join(os.path.dirname(__file__), "models")
 _MODEL_NAME = "MDX23C-De-Reverb-aufr33-jarredou.ckpt"
 _CONFIG_NAME = "config_dereverb_mdx23c.yaml"

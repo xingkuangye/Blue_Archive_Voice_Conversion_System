@@ -12,7 +12,42 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-_device = torch.device("cpu")
+
+def unload_all():
+    """释放所有 UVR5 模型显存"""
+    global _demucs_model, _demucs_model_name
+    import gc, torch
+    try:
+        from vocal_roformer import unload_model as unload_v
+        unload_v()
+    except Exception:
+        pass
+    try:
+        from mdx23c_dereverb import unload_model as unload_m
+        unload_m()
+    except Exception:
+        pass
+    if _demucs_model is not None:
+        _demucs_model = _demucs_model.cpu()
+        del _demucs_model
+        _demucs_model = None
+        _demucs_model_name = None
+    gc.collect()
+    torch.cuda.empty_cache()
+    logger.info("uvr5: 所有模型已卸载，显存已释放")
+
+
+# 自动检测 GPU
+try:
+    if torch.cuda.is_available():
+        _device = torch.device("cuda")
+        logger.info(f"✅ uvr5: GPU 推理 ({torch.cuda.get_device_name(0)})")
+    else:
+        _device = torch.device("cpu")
+        logger.info("ℹ️ uvr5: CPU 推理")
+except Exception:
+    _device = torch.device("cpu")
+    logger.info("ℹ️ uvr5: CPU 推理")
 
 # ─── Demucs 缓存 ───
 _demucs_model = None

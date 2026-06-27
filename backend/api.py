@@ -297,6 +297,11 @@ def task_uvr5_separate(params: dict, cb) -> dict:
     inst_path = _save(inst, "inst")
 
     cb(100, "完成")
+    try:
+        from uvr5 import unload_all
+        unload_all()
+    except Exception:
+        pass
     return {"vocals": vocal_path, "instrumental": inst_path, "status": status}
 
 
@@ -350,6 +355,11 @@ def task_uvr5_dereverb(params: dict, cb) -> dict:
     reverb_path = _save(reverb, "reverb")
 
     cb(100, "完成")
+    try:
+        from uvr5 import unload_all
+        unload_all()
+    except Exception:
+        pass
     return {"dry": dry_path, "reverb": reverb_path, "status": status}
 
 

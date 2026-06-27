@@ -23,6 +23,22 @@ _CONFIG_NAME = "vocals_mel_band_roformer.yaml"
 _model = None
 _config = None
 
+
+def unload_model():
+    """释放 GPU 显存"""
+    global _model, _config
+    if _model is not None:
+        import gc, torch
+        _model = _model.cpu()
+        del _model
+        del _config
+        _model = None
+        _config = None
+        gc.collect()
+        torch.cuda.empty_cache()
+        import logging
+        logging.getLogger(__name__).info("vocal_roformer: 模型已卸载，显存已释放")
+
 # ─── 全局 CPU 线程优化 ───
 _NUM_CORES = cpu_count()
 torch.set_num_threads(_NUM_CORES)
@@ -30,7 +46,7 @@ try:
     torch.set_num_interop_threads(min(4, _NUM_CORES))
 except RuntimeError:
     pass  # 如果 PyTorch 并行已经初始化则跳过
-logger.info(f"系统核心: {_NUM_CORES}, 推理设备: {device}")
+logger.info(f"系统核心: {_NUM_CORES}, 推理设备: auto")
 
 
 def _clean_yaml(raw: str) -> str:
