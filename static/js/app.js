@@ -600,7 +600,10 @@ async function generateGSVTTS() {
         document.getElementById('gsv-output-info').textContent = '已生成 ' + (blob.size / 1024).toFixed(0) + ' KB';
         showToast('GSV 语音生成成功');
     } catch (e) {
-        _gsvOnline = false;
+        // Don't mark GSV offline if it's a client-side validation error
+        if (e.message.indexOf('文本过长') === -1) {
+            _gsvOnline = false;
+        }
         statusEl.style.display = 'none';
         if (noOutput) noOutput.style.display = 'block';
         showToast('GSV 失败: ' + e.message);
