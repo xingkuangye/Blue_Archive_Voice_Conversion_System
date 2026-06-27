@@ -14,7 +14,7 @@ CONFIG_PATH = Path(__file__).parent.parent / "weights" / "uvr5_remote_config.jso
 DEFAULT_CONFIG = {
     "api_url": "",
     "enabled": False,
-    "timeout": 30,
+    "timeout": 120,
 }
 
 
@@ -80,14 +80,14 @@ async def separate_remote(audio_data: bytes, model_name: str = "mel_band_roforme
     api_url = cfg["api_url"]
     timeout = cfg.get("timeout", 120)
 
-    async with httpx.AsyncClient(timeout=min(30, timeout)) as client:
+    async with httpx.AsyncClient(timeout=120) as client:
         # 上传音频文件
         files = {"audio": ("input.wav", audio_data, "audio/wav")}
         resp = await client.post(
             f"{api_url.rstrip('/')}/api/uvr5/separate",
             data={"model_name": model_name},
             files=files,
-            timeout=min(30, timeout),
+            timeout=120,
         )
         if resp.status_code != 200:
             detail = resp.text
@@ -119,12 +119,12 @@ async def dereverb_remote(audio_data: bytes, overlap: int = 4) -> dict:
     api_url = cfg["api_url"]
     timeout = cfg.get("timeout", 120)
 
-    async with httpx.AsyncClient(timeout=max(30, timeout)) as client:
+    async with httpx.AsyncClient(timeout=120) as client:
         files = {"audio": ("input.wav", audio_data, "audio/wav")}
         resp = await client.post(
             f"{api_url.rstrip('/')}/api/uvr5/dereverb",
             data={"overlap": overlap},
-            timeout=max(30, timeout),
+            timeout=120,
             files=files,
         )
         if resp.status_code != 200:
