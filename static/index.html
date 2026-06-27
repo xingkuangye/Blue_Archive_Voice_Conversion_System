@@ -132,7 +132,7 @@
                         <div class="upload-zone" onclick="document.getElementById('uvr5-file-input').click()"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4A90D9" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><p>上传要分离的音频</p></div>
                         <input id="uvr5-file-input" type="file" accept="audio/*" onchange="onUVR5FileSelected(event)" hidden />
                         <div id="uvr5-file-info" class="file-info" style="display:none"><span id="uvr5-file-name"></span><button class="btn-sm" onclick="clearUVR5File()">移除</button></div>
-                        <div class="param-item"><label>分离模型</label><select id="uvr5-model" class="param-select"><option value="mel_band_roformer">MelBand Roformer (人声专用) ★</option><option value="htdemucs">HTDemucs (通用分离)</option><option value="htdemucs_ft">HTDemucs FT (高精度)</option></select></div>
+                        <div class="param-item"><label>分离模型</label><select id="uvr5-model" class="param-select"><option value="htdemucs">HTDemucs (通用分离) ★</option><option value="htdemucs_ft">HTDemucs FT (高精度)</option></select></div>
                         <button id="btn-uvr5" class="btn-primary" onclick="startUVR5()" disabled><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> 开始分离</button>
                     </div>
                     <div class="uvr5-output">

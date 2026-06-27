@@ -521,7 +521,7 @@ async def convert_voice(
 
 
 @app.post("/api/uvr5/separate")
-async def uvr5_separate(audio_path: str = Form(...), model_name: str = Form("mel_band_roformer")):
+async def uvr5_separate(audio_path: str = Form(...), model_name: str = Form("htdemucs")):
     if not ml_available:
         raise HTTPException(status_code=503, detail="ML 不可用")
     if not os.path.isfile(audio_path):
