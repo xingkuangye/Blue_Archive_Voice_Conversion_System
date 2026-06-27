@@ -74,6 +74,32 @@ function renderCharacterGrid() {
     }
 }
 
+
+// ─── RVC 搜索 ───
+var _searchTimer = null;
+function onSearchChange() {
+    clearTimeout(_searchTimer);
+    var q = document.getElementById('search-input').value.trim().toLowerCase();
+    _searchTimer = setTimeout(function() {
+        var grid = document.getElementById('character-grid');
+        if (!grid) return;
+        var sections = grid.querySelectorAll('.category-section');
+        for (var si = 0; si < sections.length; si++) {
+            var cards = sections[si].querySelectorAll('.character-card');
+            var visibleCount = 0;
+            for (var ci = 0; ci < cards.length; ci++) {
+                var name = cards[ci].querySelector('h4');
+                if (name) {
+                    var match = name.textContent.toLowerCase().indexOf(q) > -1;
+                    cards[ci].style.display = match || !q ? '' : 'none';
+                    if (match || !q) visibleCount++;
+                }
+            }
+            sections[si].style.display = visibleCount > 0 ? '' : 'none';
+        }
+    }, 200);
+}
+
 function populateCharSelect() {
     var select = document.getElementById('studio-char-select');
     select.innerHTML = '<option value="">— 选择角色 —</option>';
@@ -439,6 +465,26 @@ var _gsvLastAudioUrl = null;
 var _gsvModels = [];
 var _gsvOnline = false;
 var _gsvCurrentChar = null;
+
+
+// ─── GSV 搜索 ───
+var _gsvSearchTimer = null;
+function onGSVSearchChange() {
+    clearTimeout(_gsvSearchTimer);
+    _gsvSearchTimer = setTimeout(function() {
+        var q = document.getElementById('gsv-search-input').value.trim().toLowerCase();
+        var grid = document.getElementById('gsv-character-grid');
+        if (!grid) return;
+        var cards = grid.querySelectorAll('.character-card');
+        for (var i = 0; i < cards.length; i++) {
+            var name = cards[i].querySelector('h4');
+            if (name) {
+                var match = name.textContent.toLowerCase().indexOf(q) > -1;
+                cards[i].style.display = match || !q ? '' : 'none';
+            }
+        }
+    }, 200);
+}
 
 async function loadGSVModels() {
     var statusEl = document.getElementById('gsv-connection-status');
