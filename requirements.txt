@@ -14,3 +14,4 @@ pyworld>=0.3.0
 faiss-cpu>=1.7.0
 torchcrepe>=0.0.20
 onnxruntime>=1.15.0
+httpx>=0.28.0
