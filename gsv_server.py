@@ -1,83 +1,96 @@
 """
-GSV (GPT-SoVits) 独立 API 服务器
-每次请求后自动卸载模型释放显存
+GSV TTS 独立服务器（适配 GPT-SoVITS v2pro api_v2.py）
+每次 TTS 后自动卸载模型释放显存
 
 用法:
-  pip install torch soundfile numpy
-  python gsv_server.py --port 54565
+  runtime\\python.exe gsv_server.py --port 54565
 
-  --gpt_root F:/GPT-SoVITS/GPT_weights_v4
-  --sovits_root F:/GPT-SoVITS/SoVITS_weights_v4
-
-端点:
-  GET  /openapi.json          — 健康检查
-  GET  /set_gpt_weights       — 切换 GPT 模型 (weights_path)
-  GET  /set_sovits_weights    — 切换 SoVits 模型 (weights_path)
-  GET  /set_refer_audio       — 设置参考音频 (refer_audio_path)
-  GET  /tts                   — 语音合成
-  GET  /unload                — 手动卸载模型释放显存
+放在 GPT-SoVITS 根目录下运行
 """
-import os, sys, io, gc, uuid, json, logging, argparse, tempfile
-import traceback
+import os, sys, gc, json, logging, argparse, traceback, signal, wave
 from pathlib import Path
+from io import BytesIO
 
 import uvicorn
 import torch
-import soundfile as sf
 import numpy as np
-from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import Response
-from contextlib import asynccontextmanager
+import soundfile as sf
+from fastapi import FastAPI, HTTPException, Query, Response
+from fastapi.responses import JSONResponse
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("gsv-server")
 
+# 把当前目录和 GPT_SoVITS 加入路径
+now_dir = os.getcwd()
+sys.path.append(now_dir)
+sys.path.append(os.path.join(now_dir, "GPT_SoVITS"))
+
 _device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-_gpt_model = None
-_sovits_model = None
-_hz = 32000
-_version = "v4"
-_is_half = False
+_tts_pipeline = None
+_tts_config = None
 
 app = FastAPI(title="GSV TTS Server", version="2.0.0")
 
 
 def unload():
-    """卸载所有模型释放显存"""
-    global _gpt_model, _sovits_model
-    if _gpt_model is not None:
-        _gpt_model = _gpt_model.cpu()
-        del _gpt_model
-        _gpt_model = None
-    if _sovits_model is not None:
-        _sovits_model = _sovits_model.cpu()
-        del _sovits_model
-        _sovits_model = None
+    """销毁 pipeline 释放显存"""
+    global _tts_pipeline, _tts_config
+    if _tts_pipeline is not None:
+        del _tts_pipeline
+        _tts_pipeline = None
+    if _tts_config is not None:
+        del _tts_config
+        _tts_config = None
     gc.collect()
     torch.cuda.empty_cache()
     if torch.cuda.is_available():
         logger.info(f"显存已释放，当前占用: {torch.cuda.memory_allocated()/1024**2:.0f}MB")
+    else:
+        logger.info("模型已卸载")
+
+
+def get_pipeline():
+    """获取或创建 TTS pipeline"""
+    global _tts_pipeline, _tts_config
+    if _tts_pipeline is None:
+        from GPT_SoVITS.TTS_infer_pack.TTS import TTS, TTS_Config
+        from tools.i18n.i18n import I18nAuto
+        i18n = I18nAuto()
+        config_path = "GPT_SoVITS/configs/tts_infer.yaml"
+        if not os.path.isfile(config_path):
+            config_path = "GPT-SoVITS/configs/tts_infer.yaml"
+        _tts_config = TTS_Config(config_path)
+        _tts_pipeline = TTS(_tts_config)
+        logger.info("TTS pipeline 初始化完成")
+    return _tts_pipeline
+
+
+def pack_wav(io_buffer: BytesIO, data: np.ndarray, rate: int):
+    sf.write(io_buffer, data, rate, format="wav")
+    return io_buffer
 
 
 @app.get("/openapi.json")
-async def openapi():
+async def openapi_schema():
     return {
+        "openapi": "3.1.0",
         "info": {"title": "GSV TTS Server", "version": "2.0.0"},
         "paths": {
-            "/set_gpt_weights": {"get": {"parameters": [{"name": "weights_path", "in": "query"}]}},
-            "/set_sovits_weights": {"get": {"parameters": [{"name": "weights_path", "in": "query"}]}},
-            "/set_refer_audio": {"get": {"parameters": [{"name": "refer_audio_path", "in": "query"}]}},
+            "/set_gpt_weights": {"get": {"parameters": [{"name": "weights_path", "in": "query", "required": True}]}},
+            "/set_sovits_weights": {"get": {"parameters": [{"name": "weights_path", "in": "query", "required": True}]}},
+            "/set_refer_audio": {"get": {"parameters": [{"name": "refer_audio_path", "in": "query", "required": True}]}},
             "/tts": {"get": {"parameters": [
-                {"name": "text", "in": "query"},
+                {"name": "text", "in": "query", "required": True},
                 {"name": "text_lang", "in": "query"},
-                {"name": "ref_audio_path", "in": "query"},
+                {"name": "ref_audio_path", "in": "query", "required": True},
                 {"name": "prompt_text", "in": "query"},
                 {"name": "prompt_lang", "in": "query"},
                 {"name": "top_k", "in": "query"},
                 {"name": "top_p", "in": "query"},
                 {"name": "temperature", "in": "query"},
                 {"name": "speed_factor", "in": "query"},
-                {"name": "seed", "in": "query"},
+                {"name": "text_split_method", "in": "query"},
             ]}},
             "/unload": {"get": {}},
         }
@@ -86,105 +99,109 @@ async def openapi():
 
 @app.get("/set_gpt_weights")
 async def set_gpt_weights(weights_path: str = Query(...)):
-    global _gpt_model, _hz, _version
     try:
-        unload()
-        logger.info(f"加载 GPT 模型: {weights_path}")
-
-        # 导入 GPT-SoVits 模块
-        sys.path.insert(0, str(Path(weights_path).parent.parent))
-        from GPT_SoVITS.inference_web import get_tts_model, change_gpt_weights_v2
-
-        _gpt_model, _hz, _version = change_gpt_weights_v2(weights_path)
-        logger.info(f"GPT 加载成功: {weights_path}, sr={_hz}, version={_version}")
-        return {"ok": True, "message": f"GPT 模型切换成功 ({Path(weights_path).name})"}
+        pipeline = get_pipeline()
+        pipeline.init_t2s_weights(weights_path)
+        logger.info(f"GPT 模型加载成功: {Path(weights_path).name}")
+        return JSONResponse({"message": "success"})
     except Exception as e:
         logger.error(f"GPT 加载失败: {e}")
-        raise HTTPException(500, detail=str(e))
+        raise HTTPException(400, detail=str(e))
 
 
 @app.get("/set_sovits_weights")
 async def set_sovits_weights(weights_path: str = Query(...)):
-    global _sovits_model
     try:
-        logger.info(f"加载 SoVits 模型: {weights_path}")
-        from GPT_SoVITS.inference_web import change_sovits_weights_v2, change_sovits_weights_v4
-
-        if _version == "v4":
-            _sovits_model = change_sovits_weights_v4(_sovits_model, weights_path)
-        else:
-            _sovits_model = change_sovits_weights_v2(_sovits_model, weights_path)
-        logger.info(f"SoVits 加载成功: {weights_path}")
-        return {"ok": True, "message": f"SoVits 模型切换成功 ({Path(weights_path).name})"}
+        pipeline = get_pipeline()
+        pipeline.init_vits_weights(weights_path)
+        logger.info(f"SoVits 模型加载成功: {Path(weights_path).name}")
+        return JSONResponse({"message": "success"})
     except Exception as e:
         logger.error(f"SoVits 加载失败: {e}")
-        raise HTTPException(500, detail=str(e))
+        raise HTTPException(400, detail=str(e))
 
 
 @app.get("/set_refer_audio")
-async def set_refer_audio(refer_audio_path: str = Query("")):
+async def set_refer_audio(refer_audio_path: str = Query(...)):
     try:
-        if refer_audio_path and os.path.isfile(refer_audio_path):
-            # 验证文件存在即可，GPT-SoVITS 内部会重新加载
-            logger.info(f"参考音频已设置: {refer_audio_path}")
-        return {"ok": True, "message": "参考音频设置成功"}
+        pipeline = get_pipeline()
+        pipeline.set_ref_audio(refer_audio_path)
+        logger.info(f"参考音频已设置: {refer_audio_path}")
+        return JSONResponse({"message": "success"})
     except Exception as e:
-        raise HTTPException(500, detail=str(e))
+        logger.error(f"参考音频设置失败: {e}")
+        raise HTTPException(400, detail=str(e))
 
 
 @app.get("/tts")
-async def tts(
+async def tts_endpoint(
     text: str = Query(...),
     text_lang: str = Query("zh"),
-    ref_audio_path: str = Query(""),
+    ref_audio_path: str = Query(...),
     prompt_text: str = Query(""),
     prompt_lang: str = Query("zh"),
     top_k: int = Query(5),
     top_p: float = Query(1.0),
     temperature: float = Query(1.0),
     speed_factor: float = Query(1.0),
+    text_split_method: str = Query("cut5"),
     media_type: str = Query("wav"),
     seed: int = Query(-1),
+    batch_size: int = Query(1),
+    parallel_infer: bool = Query(True),
+    repetition_penalty: float = Query(1.35),
+    sample_steps: int = Query(32),
+    streaming_mode: bool = Query(False),
 ):
-    if _gpt_model is None or _sovits_model is None:
-        raise HTTPException(400, detail="模型未加载，请先调用 set_gpt_weights 和 set_sovits_weights")
-
     try:
-        from GPT_SoVITS.inference_web import get_tts_wav
+        pipeline = get_pipeline()
 
-        sr, audio = get_tts_wav(
-            ref_audio_path=ref_audio_path,
-            ref_text=prompt_text,
-            ref_lang=prompt_lang,
-            gen_text=text,
-            gen_lang=text_lang,
-            top_k=top_k,
-            top_p=top_p,
-            temperature=temperature,
-            speed=speed_factor,
-        )
+        req = {
+            "text": text,
+            "text_lang": text_lang.lower(),
+            "ref_audio_path": ref_audio_path,
+            "aux_ref_audio_paths": [],
+            "prompt_text": prompt_text,
+            "prompt_lang": prompt_lang.lower(),
+            "top_k": top_k,
+            "top_p": top_p,
+            "temperature": temperature,
+            "text_split_method": text_split_method,
+            "batch_size": batch_size,
+            "speed_factor": float(speed_factor),
+            "split_bucket": True,
+            "fragment_interval": 0.3,
+            "seed": seed,
+            "media_type": "wav",
+            "streaming_mode": False,
+            "parallel_infer": parallel_infer,
+            "repetition_penalty": repetition_penalty,
+            "sample_steps": sample_steps,
+            "super_sampling": False,
+        }
 
-        # 卸载模型释放显存
+        _, audio_data = next(pipeline.run(req))
+        audio_data = pack_wav(BytesIO(), audio_data, 32000).getvalue()
+
+        # TTS 完成后卸载模型释放显存
         unload()
 
-        buf = io.BytesIO()
-        sf.write(buf, audio, sr, format="WAV")
-        return Response(content=buf.getvalue(), media_type="audio/wav")
+        return Response(audio_data, media_type="audio/wav")
 
     except Exception as e:
         unload()
         logger.error(f"TTS 失败: {e}\n{traceback.format_exc()}")
-        raise HTTPException(500, detail=str(e))
+        return JSONResponse(status_code=400, content={"message": "tts failed", "Exception": str(e)})
 
 
 @app.get("/unload")
 async def api_unload():
     unload()
-    return {"ok": True, "message": "模型已卸载"}
+    return {"ok": True, "message": "已卸载"}
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="GSV TTS 独立服务器")
+    parser = argparse.ArgumentParser()
     parser.add_argument("--host", default="0.0.0.0")
     parser.add_argument("--port", type=int, default=54565)
     args = parser.parse_args()
@@ -192,7 +209,7 @@ if __name__ == "__main__":
     if torch.cuda.is_available():
         logger.info(f"✅ GPU: {torch.cuda.get_device_name(0)}")
     else:
-        logger.info("ℹ️ 使用 CPU")
+        logger.info("ℹ️ 使用 CPU 推理")
 
-    logger.info(f"GSV TTS 服务: http://{args.host}:{args.port}")
-    uvicorn.run("gsv_server:app", host=args.host, port=args.port)
+    logger.info(f"GSV TTS: http://{args.host}:{args.port}")
+    uvicorn.run("gsv_server:app", host=args.host, port=args.port, workers=1)
