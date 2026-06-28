@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>使用教程 — Blue Archive RVC</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Noto Sans SC', -apple-system, sans-serif;
+            background: #f5f8fc;
+            color: #2C3E50;
+            line-height: 1.8;
+        }
+        .header {
+            background: linear-gradient(135deg, #2C5F8A, #4A90D9, #6DB3F2);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+        }
+        .header h1 { font-size: 36px; font-weight: 900; margin-bottom: 8px; }
+        .header p { font-size: 16px; opacity: 0.85; }
+        .container { max-width: 800px; margin: 0 auto; padding: 40px 20px 80px; }
+        .section {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(74,144,217,0.10);
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+        .section h2 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e8f1fa;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section h2 .num {
+            width: 32px; height: 32px;
+            background: #4A90D9;
+            color: white;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        .section h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin: 20px 0 8px;
+            color: #4A90D9;
+        }
+        .section p { font-size: 15px; color: #555; margin-bottom: 12px; }
+        .section ul { padding-left: 20px; margin-bottom: 12px; }
+        .section li { font-size: 14px; color: #555; margin-bottom: 6px; }
+        .note {
+            background: #fff8e1;
+            border-left: 4px solid #f5c842;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #8d6e00;
+            margin: 12px 0;
+        }
+        .tag {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 20px;
+            margin-right: 4px;
+        }
+        .tag-blue { background: #e8f1fa; color: #4A90D9; }
+        .tag-green { background: #e8faf0; color: #2d8f5c; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+        th, td {
+            padding: 10px 14px;
+            border: 1px solid #dce4ec;
+            text-align: left;
+        }
+        th { background: #e8f1fa; font-weight: 600; }
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+            font-size: 13px;
+        }
+        .step-list { counter-reset: step; }
+        .step-item {
+            counter-increment: step;
+            padding: 16px;
+            background: #f8f9fb;
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+        .step-item::before {
+            content: "步骤 " counter(step);
+            font-weight: 700;
+            font-size: 13px;
+            color: #4A90D9;
+        }
+        @media (max-width: 600px) {
+            .header h1 { font-size: 26px; }
+            .section { padding: 20px; }
+            .section h2 { font-size: 18px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>📖 使用教程</h1>
+    <p>Blue Archive Voice Conversion System — 从入门到精通</p>
+</div>
+
+<div class="container">
+
+    <div class="section">
+        <h2><span class="num">1</span>概述</h2>
+        <p>这是一个基于 RVC + GPT-SoVits 的变声 Web 应用，可以把你的声音转换成 Blue Archive 角色的声音。</p>
+        <p>系统分为 <strong>4 个主要功能</strong>：</p>
+        <table>
+            <tr><th>功能</th><th>说明</th></tr>
+            <tr><td><span class="tag tag-blue">RVC 变声</span></td><td>上传音频 → 选择角色 → 转换声音</td></tr>
+            <tr><td><span class="tag tag-blue">人声分离</span></td><td>分离音频中的人声和背景音</td></tr>
+            <tr><td><span class="tag tag-blue">混响消除</span></td><td>去除音频中的混响效果</td></tr>
+            <tr><td><span class="tag tag-green">GSV TTS</span></td><td>文字转语音（GPT-SoVits 远程合成）</td></tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2><span class="num">2</span>首页 &amp; 角色选择</h2>
+        <p>打开网站后首先看到的是<strong>首页</strong>，所有可用角色按分类展示。</p>
+        <div class="step-list">
+            <div class="step-item">
+                <p><strong>浏览角色</strong> — 页面按分类分组（如「Blue Archive」），每个分组横向滚动显示角色卡片。卡片上显示角色头像、名称、作者和版本号。</p>
+            </div>
+            <div class="step-item">
+                <p><strong>搜索角色</strong> — 页面顶部有搜索框，输入角色名、标题或作者即可实时过滤。</p>
+            </div>
+            <div class="step-item">
+                <p><strong>进入变声工作室</strong> — 点击任意角色卡片，自动跳转到变声工作室并选中该角色。</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><span class="num">3</span>变声工作室 <span class="tag tag-blue">核心功能</span></h2>
+        <p>这是整个应用的核心页面。</p>
+
+        <h3>音频输入</h3>
+        <table>
+            <tr><th>来源</th><th>操作</th></tr>
+            <tr><td><strong>上传文件</strong></td><td>点击上传区域选择音频文件（MP3 / WAV / M4A / FLAC）</td></tr>
+            <tr><td><strong>GSV 音频</strong></td><td>从 GSV TTS 页面生成的音频会出现在这里（自动切换）</td></tr>
+        </table>
+        <div class="note"><strong>提示：</strong>从 GSV TTS 发送过来的音频会显示「GSV 合成音频已就绪」。</div>
+
+        <h3>转换参数</h3>
+        <table>
+            <tr><th>参数</th><th>说明</th><th>建议</th></tr>
+            <tr><td>升/降调</td><td>调整音高（-12 ~ +12）</td><td>+12 男声变女声</td></tr>
+            <tr><td>检索特征占比</td><td>保留原音色特征的程度 (0~1)</td><td>0.7</td></tr>
+            <tr><td>中值滤波半径</td><td>削弱哑音 (0~7)</td><td>≥3 启用</td></tr>
+            <tr><td>音量包络融合</td><td>保留原音频音量变化 (0~1)</td><td>1.0</td></tr>
+            <tr><td>清辅音保护</td><td>减少电音 (0~0.5)</td><td>0.5 不开启</td></tr>
+            <tr><td>重采样率</td><td>输出音频采样率</td><td>0 为不重采样</td></tr>
+            <tr><td>音频处理算法</td><td>音高提取算法</td><td>RMVPE（最佳）</td></tr>
+        </table>
+
+        <h3>开始转换</h3>
+        <p>选择角色 + 输入音频后，「开始转换」按钮会亮起。点击后等待处理完成，下方会显示播放器和下载按钮。</p>
+    </div>
+
+    <div class="section">
+        <h2><span class="num">4</span>音频处理工具 <span class="tag tag-blue">UVR5</span></h2>
+        <div class="step-list">
+            <div class="step-item">
+                <strong>人声分离</strong>
+                <p>上传音频 → 选择分离模型 → 点击「开始分离」。结果返回人声和背景音两个音频。</p>
+                <div class="note">推荐使用 HTDemucs 模型，速度快效果好。</div>
+            </div>
+            <div class="step-item">
+                <strong>混响消除</strong>
+                <p>上传带混响的音频 → 调整重叠倍数 → 点击「消除混响」。结果返回干声和混响成分。</p>
+            </div>
+        </div>
+        <p>处理过程中会显示进度条，完成后可直接试听或下载。</p>
+    </div>
+
+    <div class="section">
+        <h2><span class="num">5</span>GSV TTS <span class="tag tag-green">文字转语音</span></h2>
+        <div class="step-list">
+            <div class="step-item">
+                <strong>选择模型</strong>
+                <p>页面按板块分组展示 GSV 模型，点击任意模型卡片进入合成面板。</p>
+            </div>
+            <div class="step-item">
+                <strong>输入文字</strong>
+                <p>在文本框中输入要合成的文本。<span class="note" style="display:inline-block;margin:4px 0">单次最多输入 500 个字符。</span></p>
+            </div>
+            <div class="step-item">
+                <strong>生成语音</strong>
+                <p>点击「GSV 生成语音」，等待合成完成。结果可在线试听、下载或发送到变声工作室进行 RVC 变声。</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2><span class="num">6</span>小技巧</h2>
+        <ul>
+            <li><strong>批量处理</strong> — 先用 UVR5 分离人声，再把人声发送到变声工作室转换角色音色</li>
+            <li><strong>GSV + RVC 串联</strong> — GSV TTS 合成语音 → 发送到变声工作室 → 选择角色转换，实现文字变角色语音</li>
+            <li><strong>手机端</strong> — 已适配手机，导航栏可横向滑动，角色卡片左右滑动浏览</li>
+            <li><strong>搜索功能</strong> — 首页和 GSV 页面都有搜索框，快速定位角色</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2><span class="num">7</span>常见问题</h2>
+        <h3>转换失败/ML 不可用</h3>
+        <p>服务器可能缺少依赖或模型文件，请联系管理员排查。</p>
+        <h3>音频处理一直转圈</h3>
+        <p>长音频需要较长时间。如果配置了远程 UVR5 会更快。超过 2 分钟请重试。</p>
+        <h3>GSV 连接失败</h3>
+        <p>显示「服务不可达」说明远程合成服务器离线，稍后再试。</p>
+        <h3>角色封面不显示</h3>
+        <p>会显示角色首字作为占位符。</p>
+        <h3>后台地址</h3>
+        <p>网址后加 <code>/admin</code>，输入管理员密码即可管理模型。</p>
+    </div>
+
+</div>
+
+<div class="footer">Blue Archive Voice Conversion System &mdash; 使用教程</div>
+
+</body>
+</html>
