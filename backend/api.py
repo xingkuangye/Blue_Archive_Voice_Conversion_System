@@ -65,9 +65,16 @@ class TaskQueue:
     def get_status(self, qid: str) -> dict:
         with self._lock:
             s = self._status.get(qid)
+            # 定期清理已完成/失败的状态，保留最近 200 条
+            if len(self._status) > 500:
+                done_keys = [k for k, v in self._status.items() 
+                            if v.get("status") in ("done", "error") 
+                            and k != qid]
+                for k in done_keys[:-200]:
+                    del self._status[k]
         if s is None:
             return {"status": "unknown"}
-        return dict(s)  # 返回副本
+        return dict(s)  # 返回复件
 
     def _refresh_positions(self):
         for i, (qid, *_) in enumerate(self._queue):
@@ -447,6 +454,13 @@ if weights_dir.exists():
     app.mount("/weights", StaticFiles(directory=str(weights_dir)), name="weights")
 temp_dir = Path(__file__).parent.parent / "temp"
 os.makedirs(str(temp_dir), exist_ok=True)
+# 清理过期临时文件 (>24h)
+import time as _t
+for _f in os.listdir(str(temp_dir)):
+    _fp = os.path.join(str(temp_dir), _f)
+    if os.path.isfile(_fp) and _t.time() - os.path.getmtime(_fp) > 86400:
+        try: os.remove(_fp)
+        except: pass
 if temp_dir.exists():
     app.mount("/temp", StaticFiles(directory=str(temp_dir)), name="temp")
 
